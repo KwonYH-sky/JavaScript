@@ -1,4 +1,4 @@
-foo();
+foo(); // Error
 bar();
 
 var foo = function () {
