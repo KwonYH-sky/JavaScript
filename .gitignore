@@ -1,5 +1,7 @@
 ####################################
 .idea/
 .vscode/
-index.hrml/
-main.js/
+
+# Debuging Test
+index.html 
+main.js
