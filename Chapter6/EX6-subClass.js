@@ -6,10 +6,10 @@ function subClass(obj) {
 
     var child = function () {
         var parent = child.parent;
-        if (parent._init) {
+        if (parent.hasOwnProperty("_init")) {
             parent._init.apply(this, arguments);
         }
-        if (child.prototype._init) {
+        if (child.prototype.hasOwnProperty("_init")) {
             child.prototype._init.apply(this, arguments);
         }
     };
