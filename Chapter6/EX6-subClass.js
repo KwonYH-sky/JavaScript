@@ -1,34 +1,36 @@
-function subClass(obj) {
-
-
-    var parent = this === window ? Function : this;  // Node.js의 경우에는 global을 사용한다.
+var subClass = function () {
     var F = function () { };
 
-    var child = function () {
-        var _paremt = child.parent_constructor;
-        if (_paremt && _paremt !== Function) { // 현재 클래스의 부모 생성자가 있으면 그 함수를 호출한다. 다만 부모가 Function인 경우는 퇴상위 클래스에 도달 했으므로 실행하지 않는다.
-            _paremt.apply(this, arguments); // 부모 함수의 재귀적 호출
-        }
-        if (child.prototype.hasOwnProperty("_init")) {
-            child.prototype._init.apply(this, arguments);
-        }
-    };
+    var subClass = function subClass(obj) {
+        var parent = this === window ? Function : this;  // Node.js의 경우에는 global을 사용한다.
+        var child = function () {
+            var _paremt = child.parent_constructor;
+            if (_paremt && _paremt !== Function) { // 현재 클래스의 부모 생성자가 있으면 그 함수를 호출한다. 다만 부모가 Function인 경우는 퇴상위 클래스에 도달 했으므로 실행하지 않는다.
+                _paremt.apply(this, arguments); // 부모 함수의 재귀적 호출
+            }
+            if (child.prototype.hasOwnProperty("_init")) {
+                child.prototype._init.apply(this, arguments);
+            }
+        };
 
-    F.prototype = parent.prototype;
-    child.prototype = new F();
-    child.prototype.constructor = child;
-    child.parent = parent.prototype;
-    child.parent_constructor = parent;
-    child.subClass = arguments.callee;
+        F.prototype = parent.prototype;
+        child.prototype = new F();
+        child.prototype.constructor = child;
+        child.parent = parent.prototype;
+        child.parent_constructor = parent;
+        child.subClass = arguments.callee;
 
-    for (var i in obj) {
-        if (obj.hasOwnProperty(i)) {
-            child.prototype[i] = obj[i];
+        for (var i in obj) {
+            if (obj.hasOwnProperty(i)) {
+                child.prototype[i] = obj[i];
+            }
         }
+        return child;
     }
-
-    return child;
-}
+    return subClass;
+}(); /* 즉시 실행 함수로 새로운 컨텍스트를 만들어서 F() 함수 객체를 생성
+F() 함수객체는 클로저에 엮여서 가비지 컬렉션의 대상이 되지 않고, subClass() 함수를 호출할 때마다 사용.
+*/
 
 /**
  *     var child = function () {
