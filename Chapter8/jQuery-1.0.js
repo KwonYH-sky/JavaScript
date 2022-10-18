@@ -1047,7 +1047,9 @@ jQuery.macros = {
     }
 };
 
-jQuery.init(); jQuery.fn.extend({
+jQuery.init();
+
+jQuery.fn.extend({
 
     // We're overriding the old toggle function, so
     // remember it for later
