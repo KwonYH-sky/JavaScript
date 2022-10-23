@@ -1,6 +1,7 @@
 ####################################
 .idea/
 .vscode/
+.hintrc
 
 # Debuging Test
 index.html 
