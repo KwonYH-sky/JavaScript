@@ -112,7 +112,7 @@ sayHiDeferred("철수"); // 2초 후 "안녕, 철수"가 출력된다.
 /**
  * 화살표 함수를 사용하지 않고 동일한 기능을 하는 데코레이터 함수를 만들면 아래와 같다.
  */
-function dederNomal(f, ms) {
+function deferNormal(f, ms) {
     return function (...args) {
         let ctx = this;
         setTimeout(function () {
