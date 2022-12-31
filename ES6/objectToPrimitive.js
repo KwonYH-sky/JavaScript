@@ -129,3 +129,105 @@ alert(userA.valueOf() === userA); // true
  * `valueOf`는 객체 자신을 반환하기 때문에 그 결과가 무시된다. 이유는 역사적인 이유때문이라고 한다.
  * 그래서 우리는 이 메서드가 존재하지 않는다고 생각하면 된다.
  */
+
+// `toString`과 `valueOf`를 조합해서 Symbol.toPrimitive과 동일하게 동작
+let userOther = {
+    name: "Jake",
+    money: 1000,
+
+    // hint가 "string"인 경우
+    toString() {
+        return `{name: "${this.name}"}`;
+    },
+
+    // hint가 "number"나 "default"인 경우
+    valueOf() {
+        return this.money;
+    }
+};
+
+alert(userOther); // toString -> {name:"Jake"}
+alert(+userOther); // valueOf -> 1000
+alert(userOther + 500); // valueOf -> 1500
+
+/* 
+ * 출력결과가 Symbol.toPrimitive와 완전 동일하게 작동된다.
+ * 그런데 간혹 모든 형 변환을 한 곳에서 처리해야하는 경우도 생긴다. 이런 땐 toString만 구현하면 된다.
+ */
+
+let userAnother = {
+    name: "Jim",
+
+    toString() {
+        return this.name;
+    }
+};
+
+alert(userAnother); // toString -> Jim
+alert(userAnother + 500); // toString -> Jim500
+/* 객체에 Symbol.toPrimitive와 valueOf가 없으면, toString이 모든 형 변환을 처리한다. */
+
+//////////////
+
+/** 변환 타입
+ * 위에 언급된 세 개의 메서드는 'hint'에 명시된 자료형으로의 형 변환을 보장해 주지 않는다.
+ * `toString()`이 항상 문자열을 반환하리라는 보장이 없고, Symbol.toPrimitive의 hint가 "number"일 때 항상 숫자형 자료가 반환되리라는 보장이 없다.
+ * 확신할 수 있는 단 한 가지는 객체가 아닌 원시값을 반환해 준다는 것이다.
+ * 
+ ** 과거의 잔재
+ * toString이나 valueOf가 객체를 반환해도 에러가 발생하지 않는다. 다만 이때는 반환 값이 무시되고, 메서드 자체가 존재하지 않았던 것처럼 동작한다.
+ * 이렇게 동작하는 이유는 과거 자바스크립트엔 "에러"라는 개념이 잘 정립되어 있지 않았기 떄문이라고 한다.
+ * 반면에 Symbol.toPrimitive는 무조건 원시자료를 반환해야한다. 그렇지 않으면 에러가 발생한다.
+ */
+
+/////////////
+
+/** 추가 형 변환
+ * 상당수의 연산자와 함수가 피연산자의 형을 변환시킨다. 곱셉을 해주는 연산자*는 피연산자를 숫자형으로 변환시킨다.
+ * 
+ * 객체가 피연산자일 때는 다음과 같이 거쳐 형 변환이 일어난다.
+ * 1. 객체는 원시형으로 변화한다. 변화 규칙는 위에 언급한 순으로 일어난다.
+ * 2. 변환 후 원시값이 원하는 형이 아닌 경우엔 또다시 형 변환이 일어난다.
+ */
+
+let obj = {
+    // 다른 메서드가 없으면 toString에서 모든 형 변환을 처리한다.
+    toString() {
+        return "2";
+    }
+};
+
+alert(obj * 2); // 4, 객체가 문자열 "2"로 바뀌고, 곱셈 연산 과정에서 문자열 "2"는 숫자 2로 변경
+
+/* 1. obj * 2 에선 객체가 원시형으로 변환되므로 toString에의해 obj는 문자열 "2"가 된다.
+ * 2. 곱셈 연산은 문자열은 숫자형으로 변환시키므로 "2" * 2는 2 * 2가 된다.
+ *
+ * 그런데 이항 덧셈 연산은 위와 같은 상황에서 문자열을 연결한다.
+ */
+
+alert(obj + 2); // 22("2" + 2), 문자열이 반환되기 때문에 문자열끼리의 변합이 일어났다.
+
+ ////
+
+/** 요약
+ * 원시값을 기대하는 내장 함수나 연산자를 사용할 때 객체-원시형으로의 형 변환이 자동으로 일아난다.
+ * 객체-원시형으로의 형 변환은 hint를 기준으로 세 가지로 구분
+ * "string" (alert 같이 문자열을 필요하는 연산)
+ * "number" (수학 연산)
+ * "default" (드물게 발생함)
+ * 
+ * 연산자별로 어떤 hint가 적용되는지는 명세서에서 볼수 있다. 연산자가 기대하는 피연산자를 '확신할 수 없을 때'에는 hint가 "default"가 된다.
+ * 이런 경우 아주 드물게 발생한다. 내장 객체는 대개 hint가 "default"일 때와 "number"일 때를 동일하게 처리한다.
+ * 따라서 실무에선 hint가 "default"인 경우와 "number"인 경우를 합쳐서 처리하는 경우가 많다.
+ * 
+ * 객체-원시형 반환엔
+ * 1. 객체에 obj[Symbol.toPrimitive](hint) 메서드가 있는지 찾고, 있다면 메서드를 호출한다. 
+ * 2. 1에 해당하지 않고 hint가 "string"이라면, 
+ *     `obj.toString()`이나 `obj.valueOf()`를 호출한다.
+ * 3. 1과 2에 해당히지 않고, hint가 "number"나 "default"라면, 
+ *     `obj.valueOf()`나 `obj.toString()`을 호출한다.
+ * 
+ * obj.toString()만 사용해도 '모든 변환'을 다 다룰 수 있기 때문에, 실무에선 obj.toString()만 구현해도 충분한 경우가 많다.
+ * 반환 값도 '사람이 읽고 이해할 수 있는'형식이기 때문에 실용성 측면에서 다른 메서드에 뒤처지지 않는다.
+ * obj.toString()은 로깅이나 디버깅 목적으로도 자주 사용된다.
+ */
