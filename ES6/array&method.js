@@ -128,8 +128,8 @@ alert(arr.concat([3, 4], 5, 6)); // 1,2,3,4,5,6
 arr = [1, 2];
 
 let arrayLike = {
-    0: "something",
-    length: 1
+   0: "something",
+   length: 1
 };
 
 alert(arr.concat(arrayLike)); // 1, 2, [object Object]
@@ -140,10 +140,10 @@ alert(arr.concat(arrayLike)); // 1, 2, [object Object]
 arr = [1, 2];
 
 arrayLike = {
-    0: "something",
-    1: "else",
-    [Symbol.isConcatSpreadable]: true,
-    length: 2
+   0: "something",
+   1: "else",
+   [Symbol.isConcatSpreadable]: true,
+   length: 2
 };
 
 alert(arr.concat(arrayLike)); // 1, 2, something, else
@@ -167,7 +167,7 @@ alert(arr.concat(arrayLike)); // 1, 2, something, else
 
 // 인덱스 정보까지 더해서 출력해주는 좀 더 정교한 코드
 ["Bilbo", "Gandalf", "Nazgul"].forEach((item, index, array) => {
-    alert(`${item} is at index ${index} in ${array}`);
+   alert(`${item} is at index ${index} in ${array}`);
 });
 
 /* 참고로, 인수로 넘겨준 함수의 반환값은 무시된다. */
@@ -223,9 +223,9 @@ alert(arr.includes(NaN)); // true (NaN의 여부를 확인하였다.)
 
 // id와 name 프로퍼티를 가진 사용자 객체로 구성된 배열에서 id == 1 조건에 충족하는 사용자 객체를 찾는 코드
 let users = [
-    { id: 1, name: "John" },
-    { id: 2, name: "Pete" },
-    { id: 3, name: "Mary" }
+   { id: 1, name: "John" },
+   { id: 2, name: "Pete" },
+   { id: 3, name: "Mary" }
 ];
 
 let user = users.find(item => item.id == 1);
@@ -254,9 +254,9 @@ alert(user.name); // John
  */
 
 users = [
-    { id: 1, name: "John" },
-    { id: 2, name: "Pete" },
-    { id: 3, name: "Mary" }
+   { id: 1, name: "John" },
+   { id: 2, name: "Pete" },
+   { id: 3, name: "Mary" }
 ];
 
 // 앞쪽 사용자 두 명을 반환한다.
@@ -303,9 +303,9 @@ alert(arr); // 1, 15, 2
    인수로 넘겨주는 함수는 반드시 값 두 개를 비교해야 하고 반환 값도 있어야 한다. */
 
 function compareNumeric(a, b) {
-    if (a > b) return 1; // 첫 번째 값이 두 번째 값보다 큰 경우
-    if (a == b) return 0; // 두 값이 같은 경우
-    if (a < b) return -1; // 첫 번째 값이 두 번째 값보다 작은 경우
+   if (a > b) return 1; // 첫 번째 값이 두 번째 값보다 큰 경우
+   if (a == b) return 0; // 두 값이 같은 경우
+   if (a < b) return -1; // 첫 번째 값이 두 번째 값보다 작은 경우
 }
 
 arr = [1, 15, 2];
@@ -326,6 +326,91 @@ alert(arr); // 1, 2, 15
 
    정렬 과정에서 어떤 요소끼리 비교가 일어났는지 확인 하고 싶다면 아래 코드를 활용하자 */
 [1, -2, 15, 2, 0, 8].sort((a, b) => {
-    alert(a + "<>" + b);
-    return a - b;
+   alert(a + "<>" + b);
+   return a - b;
 });
+
+// 정렬 중에 한 요소가 특정 요소와 여러 번 비교되는 일이 생기곤 하는데 비교 횟수를 최소화 하려다 보면 이런 일이 발생할 수 있다.
+
+/** 정렬 함수는 어떤 숫자든 반환할 수 있다.
+ * 정렬 함수의 반환 값엔 제약이 없다. 
+ * 양수를 반환하는 경우 첫 번째 인수가 두 번째 인수보다 '크다'를 나타내고,
+ * 음수를 반환하는 경우 첫 번째 인수가 두 번째 인수보다 '작다'를 나타내기만 하면 된다.
+ * 이 점을 이용하면 정렬 함수를 더 간결하게 만들 수 있다.
+ */
+
+arr = [1, 2, 15];
+
+arr.sort(function (a, b) { return a - b });
+
+alert(arr); // 1, 2, 15
+
+/** 화살표 함수를 사용하자.
+ * 화살표 함수를 사용하면 더 깔끔하게 만들 수 있다.
+ */
+arr.sort((a, b) => a - b);
+/* 화살표 함수를 활용한 코드와 함수 선언문을 사용한 코드는 동일하게 작동한다. */
+
+/** 문자열엔 `localeCompare`를 사용하자.
+ * 이 알고리즘은 유니코드를 기준으로 글자를 비교한다.
+ * Ö와 같은 문자가 있는 언어에도 대응하려면, str.localeCompare 메서드를 사용해 문자열을 비교하는게 좋다.
+ */
+
+let countries = ['Österreich', 'Andorra', 'Vietnam'];
+
+alert(countries.sort((a, b) => a > b ? 1 : -1)); // Andorra, Vietnam, Österreich (제대로 정렬이 되지 않는다.)
+
+alert(countries.sort((a, b) => a.localeCompare(b))); // Andorra,Österreich,Vietnam (제대로 정렬된다.)
+
+/** reverse
+ * arr.reverse는 arr의 요소를 역순으로 정렬시켜주는 메서드
+ */
+
+arr = [1, 2, 3, 4, 5];
+arr.reverse();
+
+alert(arr); // 5, 4, 3, 2, 1
+
+// 반환 값은 재 졍렬된 배열이다.
+
+/** split과 join
+ * 메시지 전송 어플리케이션을 만든다고 가정해보자. 수신자가 여려 명일 경우, 발신자는 쉼표로 각 수신자를 구분할 것이다. ex) John, Pete, Mary
+ * 개발자는 긴 문자열 형태의 수신자 리스트 배열 형태로 전환해 처리하고 싶을 것이다.
+ * 입력받은 문자열을 어떻게 배열로 바꿀 수 있을까?
+ * 
+ * str.split(delim)을 이용하면 우리가 원하는 것을 정확히 할 수 있다. 이 메서드는 구분자(delimiter) delim을 기준으로 문자열을 쪼개준다.
+ */
+
+let names = 'Bilbo, Gandalf, Nazgul';
+
+arr = names.split(', ');
+
+for (let name of arr) {
+   alert(`${name}에게 보내는 메시지`);
+};
+
+/* split 메서드는 두 번째 인수로 숫자를 받을 수 있다. 
+이 숫자는 배열의 길이를 제한해주므로 길이를 넘어서는 요소를 무시할 수 없다.
+실무에서 자주 사용하는 기능은 아니다. */
+
+arr = 'Bilbo, Gandalf, Nazgul, Saruman'.split(', ', 2);
+
+alert(arr); // Bilbo, Gandalf
+
+/* 문자열을 글자 단위로 분리하기 
+ * split(s)의 s를 빈 문자열로 지정하면 문자열을 글자 단위로 분리할 수 있다.
+ */
+
+let str = "test";
+
+alert(str.split('')); // t,e,s,t
+
+/* arr.join(glue)은 split과 반대 역할을 하는 메서드다
+ * 인수 glue를 접착제처럼 사용해 배열 요소를 모두 합친 후 하나의 문자열을 만들어 준다.
+ */
+
+arr = ['Bilbo', 'Gandalf', 'Nazgul'];
+
+str = arr.join(';'); // 배열 요소 모두를 ;를 사용해 하나의 문자열로 합친다.
+
+alert(str); // Bilbo;Gandalf;Nazgul
