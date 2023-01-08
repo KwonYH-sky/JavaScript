@@ -414,3 +414,167 @@ arr = ['Bilbo', 'Gandalf', 'Nazgul'];
 str = arr.join(';'); // 배열 요소 모두를 ;를 사용해 하나의 문자열로 합친다.
 
 alert(str); // Bilbo;Gandalf;Nazgul
+
+/** reduce와 reduceRight
+ * forEach, for, for..of를 사용하면 배열 내 요소를 대상으로 반복 작업을 할 수 있다.
+ * 각 요소를 돌면서 반복 작업을 수행하고, 작업 결과물을 새로운 배열 형태로 얻을려면 map을 사용하면 된다.
+ * 
+ * arr.reduce와 arr.reduceRight도 이런 메서드들과 유사한 작업을 해준다. 그런데 사용범이 조금 복잡하다.
+ * reduce와 reduceRight는 배열을 기반으로 값 하나를 도출 할 때 사용된다.
+ * 
+ * let value = arr.reduce(function (accumulator, item, index, array) {
+   // ...
+ }, [initial]);
+
+ * 인수로 넘겨주는 함수는 배열의 모든 요소를 대상으로 차례차례 적용되는데, 적용 결과는 다음 함수 호출 시 사용된다.
+ * 함수의 인수는 다음과 같다.
+ * accumulator - 이전 함수 호출 결과. initial은 함수 최초 호출 시 사용되는 초깃값을 나타냄(옵션)
+ * item - 현재 배열 요소
+ * index - 요소의 위치
+ * array - 배열
+ * 
+ * 이전 함수 호출 결과는 다음 함수 호출할 때 첫 번째 인수(previousValue)로 사용된다.
+ * 첫 번째 인수는 앞서 호출했던 함수들의 결과가 누적되어 저장되는 '누산기(accumulator)'라고 생각하면 된다. 
+ * 마지막 함수까지 호출되면 이 값은 reduce의 반환 값이 된다.
+ */
+
+arr = [1, 2, 3, 4, 5];
+
+let result = arr.reduce((sum, current) => sum + current, 0);
+
+alert(result); // 15
+
+/* reduce에 전달한 함수는 오직 인수 두 개만 받고 있다. 대개 이렇게 인수를 두 개만 받는다.
+   그리고 다음과 같은 과정을 거친다.
+   1. 함수 최초 호출 시, reduce의 마지막 인수인 0(초깃값)이 sun에 할당된다. current엔 배열의 첫 번째 요소인 1이 할당된다. 따라서 함수의 결과는 1이 된다.
+   2. 두 번째 호출 시, sum = 1이고, 여기에 배열의 두 번째 요소(2)가 더해지므로 결과는 3이 된다.
+   3. 세 번째 호출 시, sum = 3이고, 여기에 배열의 다음 요소가 더해진다. 이런 과정이 계속 이어진다.
+*/
+
+// 초깃값을 생략하는 것도 가능하다.
+arr = [1, 2, 3, 4, 5];
+
+// reduce에서 초깃값을 제거함(0이 없음)
+result = arr.reduce((sum, current) => sum + current);
+
+alert(result); // 15
+
+/**
+ * 초기값을 없애도 결과는 동일하다. 초기값이 없으면 reduce는 배열의 첫 번째 요소를 초기값으로 사용하고 
+ * 두 번쨰 요소부터 함수를 호출하기 때문이다.
+ * 
+ * 하지만, 이렇게 초깃값 없이 reduce를 사용할 땐 극도의 주의를 기울여야 한다. 배열이 비어있는 상태면 reduce 호출 시 에러가 발생하기 때문이다.
+ */
+
+arr = [];
+
+// TypeError: Reduce of empty array with no initial value
+// 초깃값을 설정해 주었다면 초기값이 반환되었을 것
+arr.reduce((sum, current) => sun + current);
+
+/* 이런 예외상황 때문에 항상 초깃값을 명시해 줄 것을 권장한다.
+arr.reduceRight는 reduce와 동일한 기능을 하지만 배열의 오른쪽부터 연선을 수행한다는 점이 다르다. */
+
+//////////////////////////////////
+
+/** Array.isArray로 배열 여부 알아내기 
+ * 자바스크립트에서 배열은 독립된 자료형으로 취급되지 않고 객체형에 속한다.
+ * 따라서 typeof로는 일반 객체와 배열을 구분 할 수 없다.
+ */
+alert(typeof {}); // object
+alert(typeof []); // object
+/* 그런데 배열은 자주 사용되는 자료구조이기 때문에 배열인지 아닌지를 감별해내는 특별한 메서드가 있다면 아주 유용할거다.
+   Array.isArray(value)는 이럴 때 사용할 수 있는 유용한 메서드이다. value가 배열이라면 true를, 배열이 아니라면 false를 반환해준다. */
+
+alert(Array.isArray({})); // false
+
+alert(Array.isArray([])); // true
+
+//////////////////////////////
+
+/** 배열 메서드와 'thisArg'
+ * 함수를 호출하는 대부분의 배열 메서드(find, filter, map 등, sort는 제외)는 thisArg라는 매개변수를 옵션으로 받을 수 있다.
+ * 자주 사용되는 인수는 아니다.
+ * 
+ * arr.find(func, thisArg);
+ * arr.filter(func, thisArg);
+ * arr.map(func, thisArg);
+ * // ...
+ * // thisArg는 선택적으로 사용할 수 있는 마지막 인수
+ * 
+ * thisArg는 func의 this가 된다.
+ */
+
+// 객체 army의 메서드를 filter의 인자로 넘겨주고 있는데, 이때 thisArg는 canJoin의 컨텍스트 정보를 넘겨준다.
+let army = {
+   minAge: 18,
+   maxAge: 27,
+   canJoin(user) {
+      return user.age >= this.minAge && user.age < this.maxAge;
+   }
+};
+
+users = [
+   { age: 16 },
+   { age: 20 },
+   { age: 23 },
+   { age: 30 }
+];
+
+// army.canJoin 호출 시 참을 반환해주는 user를 찾음
+let soldiers = users.filter(army.canJoin, army);
+
+alert(soldiers.length); // 2
+alert(soldiers[0].age); // 20
+alert(soldiers[1].age); // 23
+
+/* thisArg에 army를 지정하지 않고 단순히 users.filter(army.canJoin)를 사용했다면 army.canJoin은 단복 함수처럼 취급되고,
+   함수 본문 내 this는 undefined가 되어 에러가 발생했을 것이다.
+   users.filter(user => army.canJoin(user))를 사용하면 users.filter(army.canJoin, army)를 대체할 수 있긴 하지만,
+   thisArg를 사용하는 방식이 좀더 이해하기 쉽다. */
+
+/////////////////////////////////////////////////////
+
+/*** 요약
+ ** 요소를 더하거나 지무기 
+ *    push(...items) - 맨 끝에 요소 추가하기
+ *    pop() - 맨 끝 요소 추출하기
+ *    shift() - 첫 요소 추출하기
+ *    unshift(...items) - 맨 앞에 요소 추가하기
+ *    splice(pos, deleteCount, ...items) - pos부터 deleteCount개의 요소를 지우고, items 추가하기
+ *    slice(start, end) - start부터 end 바로 앞까지의 요소를 복사해 새로운 배열 만듦
+ *    concat(...items) - 배열의 모든 요소를 복사하고 items를 추가해 새로운 배열을 만든 후 이를 반환함. items가 배열이면 이 배열의 인수를 기존 배열에 더해줌
+ ** 원하는 요소 찾기 
+ *    indexOf/lastIndexOf(item, pos) - pos부터 원하는 item을 찾음. 찾게 되면 해당 요소의 인덱스를, 아니면 -1을 반환함
+ *    includes(value) - 배열에 value가 있으면 true를, 그렇지 않으면 false를 반환함
+ *    find/filter(func) - func의 반환 값을 true로 만드는 첫 번째/전체 요소를 반환함
+ *    findIndex는 find와 유사함. 다만 요소 대신 인덱스를 반환함
+ ** 배열 전체 순회하기 
+ *    forEach(func) - 모든 요소에 func을 호출함. 결과는 반환되지 않음
+ ** 배열 변형하기 
+ *    map(func) - 모든 요소에 func을 호출하고, 반환된 결과를 가지고 새로운 배열을 만듦
+ *    sort(func) - 배열을 정렬하고 정렬된 배열을 반환함.
+ *    reverse() - 배열을 뒤집어 반환함
+ *    split/join - 문자열을 배열로, 배열을 문자열로 반환함
+ *    reduce(func, initial) - 요소를 차례로 돌면서 func을 호출함. 반환값은 다음 함수 호출에 전달함. 최종적으로 하나의 값이 도출됨.
+ ** 기타 
+ *    Array.isArray(arr) - arr이 배열인지 여부를 판단함
+ * 
+ * sort, reverse, splice는 기존 배열을 변형시킨다는 점에 주의하자.
+ * 
+ * 위에 언급된 메서드만으로 배열과 관련된 작업 99%를 해결할 수 있다.
+ ** 이외의 메서드들
+ * arr.some(fn)과 arr.every(fn)는 배열을 확인한다.
+ *    두 메서드는 map과 유사하게 모든 요소를 대상으로 함수를 호출한다.
+ *    some은 함수의 반환 값을 true로 만드는 요소가 하나라도 있는지 여부를 확인하고,
+ *    every는 모든 요소가 함수의 반환 값을 true로 만드는지 여부를 확인한다.
+ *    두 메서드 모두 조건을 충족하면 true를, 그렇지 않으몀 false를 반환한다.
+ * 
+ * arr.fill(value, start, end)은 start부터 end까지 value를 채워 넣는다.
+ * 
+ * arr.copyWithin(target, start, end)은 start부터 end까지 요소를 복사하고, 복사한 요소를 target에 붙여넣는다. 기존 요소가 있다면 덮어쓴다.
+ * 
+ * 배열에 관련 모든 메서드는 MDN manual를 찾아보자.
+ * 
+ * 배열을 이용해야 할 때 기억이 나질 않으면 요약본을 보면서 다시 상기시키자.
+ */
