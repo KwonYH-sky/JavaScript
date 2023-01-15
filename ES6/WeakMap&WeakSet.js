@@ -36,7 +36,7 @@ john = null;
 // john을 나타내는 객체는 맵 안에 저장되어있다.
 // map.keys()를 이용하면 해당 객체를 얻는 것도 가능하다.
 for (let obj of map.keys()) {
-    alert(JSON.stringify(obj));
+   alert(JSON.stringify(obj));
 }
 
 alert(map.size);
@@ -115,8 +115,8 @@ let visitsCountMap = new Map(); // 맵에 사용자의 방문 횟수를 저장�
 
 // 사용자가 방문하면 방문 횟수를 늘려준다.
 function countUser(user) {
-    let count = visitsCountMap.get(user) || 0;
-    visitsCountMap.set(user, count + 1);
+   let count = visitsCountMap.get(user) || 0;
+   visitsCountMap.set(user, count + 1);
 }
 
 // 아래는 John이라는 사용자가 방문했을 때, 어떻게 방문 횟수가 증가하는지를 보여준다.
@@ -142,11 +142,137 @@ let visitsCountWeakMap = new WeakMap(); // 위크맵에 사용자의 방문 횟�
 
 // 사용자가 방문하면 방문 횟수를 늘려준다.
 function countUser(user) {
-    let count = visitsCountWeakMap.get(user) || 0;
-    visitsCountWeakMap.set(user, count + 1);
+   let count = visitsCountWeakMap.get(user) || 0;
+   visitsCountWeakMap.set(user, count + 1);
 }
 
 /* 위크맵을 사용해 사용자 방문 횟수를 저장하면 visitsCountWeakMap을 수동으로 청소해줄 필요가 없다.
    john을 나타내는 객체가 도달 가능하지 않는 상태가 되면 자동으로 메모리에서 삭제되기 때문이다. 
    위크맵의 키(john)에 대응하는 값(john의 방문횟수)도 자동으로 가비지 컬렉션의 대상이 된다.
 */
+
+/** 유스 케이스: 캐싱
+ * 위크맵은 캐싱(caching)이 필요할 때 유용하다. 
+ * 캐싱은 시간이 오래 걸리는 작업의 결과를 저장해서 연산 시간과 비욜을 절약해주는 기법이다.
+ * 동일한 함수를 여러 번 호출해야 할 때, 최초 호출 시 반환된 값을 어딘가에 저장해 놓았다가 
+ * 그다음엔 함수를 호출하는 대신 저장된 값을 사용하는게 캐싱의 실례이다.
+ */
+
+// 함수 연산 결과를 맵에 저장하고 있다.
+// cache.js
+let cache = new Map();
+
+// 연산을 수행하고 그 결과를 맵에 저장한다.
+function process(obj) {
+   if (!cache.has(obj)) {
+      let result = /* 연산 수행 */ obj;
+
+      cache.set(obj, result);
+   }
+   return cache.get(obj);
+}
+
+//  함수 process()를 호출
+
+// main.js
+obj = {/* ...객체...*/ };
+
+let result = process(obj); // 함수를 호출한다.
+
+// 동일한 함수를 두 번째 호출할 땐,
+let result2 = process(obj); // 연산을 수행할 필요 없이 맵에 저장된 결과를 가져오면 된다.
+
+// 객체가 쓸모 없어지면 아래와 같이 null로 덮어쓴다.
+obj = null;
+
+alert(cache.size); // 1 (그런데 객체가 여전히 cache에 남아있다. 메모리가 낭비되고 있다.)
+
+/* process(obj)를 여러 번 호출하면 최초 호출할 때만 연산이 수행 되고, 그 이후엔 연산 결과를 cache에서 가져온다.
+   그런데 맵을 사용하고 있어서 객체가 필요 없어져도 cache를 수동으로 청소해 줘야 한다.
+
+   맵을 위크맵으로 교체하면 이런 문제를 예방할 수 있다. 객체가 메모리에서 삭제되면, 
+   캐시에 저장된 결과(함수 연산 결과) 역시 메모리에서 자동으로 삭제되기 때문이다.
+*/
+
+// cache.js
+cache = new WeakMap();
+
+// 연산을 수행하고 그 결과를 위크맵에 저장한다.
+function process(obj) {
+   if (!cache.has(obj)) {
+      let result = /* 연산 수행 */ obj;
+
+      cache.set(obj, result);
+   }
+   return cache.get(obj);
+}
+
+// main.js
+obj = {/* ...객체...*/ };
+
+result = process(obj);
+result2 = process(obj);
+
+// 객체가 쓸모 없어지면 아래와 같이 null로 덮어쓴다.
+obj = null;
+
+// 이 예시에선 맵을 사용한 예시처럼 cache.size를 사용할 수 없다.
+// 하지만 obj가 가비지 컬렉션의 대상이 되므로, 캐싱된 데이터 역시 메모리에서 삭제될 것이다.
+// 삭제가 진행되면 cache엔 그 어떤 요소도 남아있지 않게 된다.
+
+////////////////////////////////////////
+
+/** 위크셋
+   * 위크셋은 셋과 유사한데, 객체만 저장할 수 있다는 점이 다르다. 원시값은 저장할 수 없다.
+   * 셋 안의 객체는 도달 가능할 때만 메모리에 유지된다.
+   * 셋과 마찬가지로 위크셋에 지원하는 메서드는 단출하다. add, has, delete를 사용할 수 있고,
+      size, keys()나 반복 작업 관련 메서드는 사용할 수 없다.
+ * '위크'맵과 유사하게 '위크'셋도 부차적인 데이터를 저장할 때 사용할 수 있다.
+ * 다만, 위크셋엔 위크맵처럼 복잡한 데이터를 저장하지 않는다.
+ * 대신 "예" 나 "아니요" 같은 간단한 답변을 얻는 용도로 사용된다. 몰론 `위크셋`에 저장되는 값은 객체들이다.
+ */
+
+// 사용자의 사이트 방문 여부를 추적하는 용도의 위크셋
+let visitedSet = new WeakSet();
+
+john = { name: "John" };
+pete = { name: "Pete" };
+mary = { name: "Mary" };
+
+visitedSet.add(john); // John이 사이트를 방문한다.
+visitedSet.add(pete); // 이어서 Pete가 사이트를 방문한다.
+visitedSet.add(john); // 이어서 John이 다시 사이트를 방문한다.
+
+// visitedSet엔 두 명의 사용자가 저장될 것이다.
+
+// John의 방문 여부를 확인해보자.
+alert(visitedSet.has(john)); // true
+
+// Mary의 방문 여부를 확인해보자
+alert(visitedSet.has(mary)); // false
+
+john = null;
+
+// visitedSet에서 john을 나타내는 객체가 자동으로 삭제된다.
+
+/* 위크맵과 위크셋의 가장 큰 단점은 반복 작업이 불가능하다는 점이다.
+   위크맵이나 위크셋은 저장된 자료를 한 번에 얻는게 불가능하다. 이런 단점은 불편함을 초래하는 것 같아 보이지만,
+   `위크맵`과 `위크셋`을 이용해 할 수 있는 주요 작업을 방해하진 않는다.
+   `위크맵`과 `위크셋`은 객체와 함께 '추가'데이터를 저장하는 용도로 쓸 수 있다.
+*/
+
+////////////////////////////////
+
+/** 요약
+ * 위크맵은 맵과 유사한 컬렉션이다. 위크맵을 구성하는 요소의 키는 오직 객체만 가능하다.
+ * 키로 사용된 객체가 메모리에서 삭제되면 이에 대응하는 값 역시 삭제된다.
+ * 
+ * 위크셋은 셋과 유사한 컬렉션이다. 위크셋엔 객체만 저장할 수 있다. 
+ * 위크셋에 저장된 객체가 도달 불가능한 상태가 되면 해당 객체는 메모리에서 삭제된다.
+ * 
+ * 두 자료구조 모두 구성 요소 전체를 대상으로 하는 메서드를 지원하지 않는다. 구성 요소 하나를 대상으로 하는 메서드만 지원한다.\
+ * 
+ * 객체엔 '주요'자료를, 위크맵과 위크셋엔 '부수적인' 자료를 저장하는 형태로 위크맵과 위크셋을 활용할 수 있다.
+ * 객체가 메모리에서 삭제되면, (그리고 오로지 위크맵과 위크셋의 키만 해당 객체를 참조하고 있다면) 위크맵이나 위크셋에 저장된 연관 자료들 역시 메모리에서 자동으로 삭제된다.
+ */
+
