@@ -53,3 +53,36 @@ let user = {
 for (let value of Object.values(user)) {
     alert(value); // Violet과 30이 연속적으로 출력됨
 }
+/** Object.keys, values, entries는 심볼형 프로퍼티를 무시한다.
+ * for..in 반복문처럼, Object.keys, Object.values, Object.entries는 키가 심볼형인 프로퍼티를 무시한다.
+ *
+ * 대개는 심볼형 키를 연산 대상에 포함하지 않는 게 좋지만,
+ * 심볼형 키가 필요한 경우엔 심볼형 키만 배열 형태로 반환해주는 메서드인 Object.getOwnPropertySymbols를 사용하면 된다.
+ * getOwnPropertySymbols 이외에도 키 전체를 배열 형태로 반환하는 메서드인 Reflect.ownKeys(obj)를 사용해도 괜찮다.
+ */
+
+/////////////////////////////////////////
+
+/** 객체 변환하기
+ * 객체엔 map, filter 같은 배열 전용 메서드를 사용할 수 없다.
+ * 하지만 Object.entries와 Object.fromEntries를 순차적으로 적용하면 객체에도 배열 전용 메서드 사용할 수 있다.
+ * 적용방법은 다음과 같다.
+    * 1. Object.entries(obj)를 사용해 객체의 키-값 쌍이 요소인 배열을 얻는다.
+    * 2. 1에서 만든 배열에 map 등의 배열 전용 메서드를 적용한다.
+    * 3. 2에서 반환된 배열에 Object.fromEntries(array)를 적용해 배열을 다시 객체로 되돌린다.
+ * 이 방법을 사용해 가격 정보가 저장된 객체 prices의 프로퍼티 값을 두 배로 늘려보자.
+ */
+let prices = {
+    banana: 1,
+    orange: 2,
+    meat: 4
+};
+
+let doublePrices = Object.fromEntries(
+    // 객체를 배열로 변환해서 배열 전용 메서드인 map을 적용하고 fromEntries를 사용해 배열 다시 객체로 되돌린다.
+    Object.entries(prices).map(([key, value]) => [key, value * 2])
+);
+
+alert(doublePrices.meat); // 8
+
+/* 위와 같은 방법으로 객체에 배열 전용 메서드를 적용을 할 수 있다. */
