@@ -162,6 +162,136 @@ user.sayHi();
 
 ///////////////////////////////////////////////
 
+/** 클래스 표현식
+ * 함수처럼 클래스도 다른 표현식 내부에서 정의, 전달, 변환, 할당할 수 있다.
+ * 먼저 클래스 표현식을 만들어보자
+ */
+
+let User = class {
+    sayHi() {
+        alert("안녕하세요.");
+    }
+};
+
+/* 기명 함수 표현식(Named Function Expression)과 유사하게 클래스 표현식에도 이름을 붙일 수 있다.
+   클래스 표현식에 이름을 붙이면, 이 이름은 오직 클래스 내부에서만 사용할 수 있다.
+*/
+
+// 기명 클래스 표현식(Named Function Expression)
+// (명세서엔 없는 용어이지만, 기명 함수 표현식과 유사하게 동작한다.)
+User = class MyClass {
+    sayHi() {
+        alert(MyClass); // MyClass라는 이름은 오직 클래스 안에서만 사용할 수 있다.
+    }
+};
+
+new User().sayHi(); // 원하는대로 MyClass의 정의를 보여준다.
+
+alert(MyClass); // ReferenceError: MyClass is not defined, MyClass는 클래스 밖에서 사용할 수 없다.
+
+/* 아래와 같이 '필요에 따라' 클래스 동적으로 생성하는 것도 가능하다. */
+
+function makeClass(phrase) {
+    // 클래스를 선언하고 이를 반환함
+    return class {
+        sayHi() {
+            alert(phrase);
+        };
+    };
+}
+
+// 새로운 클래스를 만듦
+User = makeClass("안녕하세요.");
+
+new User().sayHi(); // 안녕하세요.
+
+////////////////////////////////////////
+
+/** getter와 setter
+ * 리터럴을 사용해 만든 객체처럼 클래스도 getter나 setter, 계산된 프로퍼티(computed property)를 지원한다.
+ * get과 set을 이용해 user.name을 조작할 수 있게 해보자.
+ */
+
+class User {
+    constructor(name) {
+        // setter를 활성화한다.
+        this.name = name;
+    }
+    get name() {
+        return this._name;
+    }
+
+    set name(value) {
+        if (value.length < 2) {
+            alert("이름이 너무 짧습니다.");
+            return;
+        }
+        this._name = value;
+    }
+}
+
+user = new User("보라");
+alert(user.name); // 보라
+
+user = new User(""); // 이름이 너무 짧습니다.
+
+/* 참고로 getter와 setter는 User.prototype에 정의된다. */
+
+////////////////////////////////////
+
+/** 계산된 메서드 이름[...]
+ * 대괄호 [...]를 이용해 계산된 메서드 이름(computed method name)을 만드는 에시를 살펴보자
+ */
+
+class User {
+    ['say' + 'Hi']() {
+        alert("Hello");
+    }
+}
+
+new User().sayHi();
+
+/* 계산된 메서드 이름은 리터럴 객체와 유사한 형태를 띠기 때문에 사용법을 외우기 쉽다는 장점이 있다. */
+
+/** 클래스 필드
+    * 구식 브라우저에선 폴리필이 필요할 수 있다.
+    * 클라스 필드는 최근에 더해진 기능이다.
+ * 지금까진 살펴본 에시엔 메서드가 하나만 있었다.
+ * '클래스 필드(class filed)'라는 문법을 사용하면 어떤 종류의 프로퍼티도 클래스에 추가할 수 있다.
+ * 클래스 User에 name 프로퍼티를 추가해보자.
+ */
+
+class User {
+    name = "보라";
+
+    sayHi() {
+        alert(`${this.name}님 안녕하세요.`);
+    }
+}
+
+new User().sayHi(); // 보라님 안녕하세요.
+
+/* 클래스를 정의할 때 `<프로퍼티 이름> = <값>`을 써주면 간단히 클래스 필드를 만들 수 있다.
+   클래스 필드의 중요한 특징 중 하나는 User.prototype이 아닌 개별 객체에만 클래스 필드가 설정된다는 점이다.
+*/
+
+class User {
+    name = "보라";
+}
+
+user = new User();
+alert(user.name); // 보라
+alert(User.prototype.name); // undefined
+
+/* 아울러 클래스 필드엔 복잡한 표현식이나 함수 호출 결과를 사용할 수 있다. */
+
+class User {
+    name = prompt("이름을 알려주세요.", "보라");
+}
+
+user = new User();
+alert(user.name); // 보라
+
 /**
  * 
  */
