@@ -292,6 +292,78 @@ class User {
 user = new User();
 alert(user.name); // 보라
 
-/**
+/** 클래스 필드로 바인딩 된 메서드 만들기
+ * 자바스크립트에서 this는 동적으로 결정된다.
+ * 따라서 객체 메서드를 여기저기 전달해 전혀 다른 컨텍스트에서 호출하게 되면 
+ * this는 메서드가 정의된 객체를 참조하지 않는다.
  * 
+ * 관련 예시를 살펴보자. 예시를 실행하면 undefined가 출력된다.
  */
+class Button {
+    constructor(value) {
+        this.value = value;
+    }
+
+    click() {
+        alert(this.value);
+    }
+}
+
+let button = new Button("안녕하세요.");
+
+setTimeout(button.click, 1000); // undefined
+
+/* 이렇게 this의 컨텍스트를 알 수 없게 되는 문제를 '잃어버린 this(loosing this)'라고 한다.
+   문제는 두 방법을 사용해 해결할 수 있다.
+    1. setTimeout(()=> button.click(), 1000) 같이 래퍼 함수를 전달하기.
+    2. 생성자 안 등에서 메서드를 객체에 바인딩하기.
+
+   이 두 방법 말고 클래스 필드를 사용해도 우아하게 문제를 해결할 수 있다.
+*/
+
+class Button {
+    constructor(value) {
+        this.value = value;
+    }
+
+    click = () => {
+        alert(this.value);
+    }
+}
+
+button = new Button("안녕하세요.");
+
+setTimeout(button.click, 1000); // 안녕하세요.
+
+/* 클래스 필드 click = () => {...}는 각 Button 객체마다 독립적인 함수를 만들어주고
+   이 함수의 this를 해당 객체에 바인딩시켜준다.
+   따라서 개발자는 button.click을 아무 곳에나 전달할 수 있고, this엔 항상 의도한 값이 들어가게 된다.
+
+   클래스 필드의 이런 기능은 브라우저 환경에서 메서드를 이벤트 리스너로 설정해야할 때 특히 유용하다.
+*/
+
+////////////////////////////////////////////////////
+
+/** 요약
+ * 아래와 같은 기본 문법을 사용해 클래스를 만들 수 있다.
+
+class MyClass{
+    prop = value; // 프로퍼티
+
+    constructor(...) { // 생성자 메서드
+        // ...
+    }
+
+    method(...) {} // 메서드
+
+    get something(...) {} // getter 메서드
+    set something(...) {} // setter 메서드
+
+    [Symbol.iterator]() {} // 계산된 이름(computed name)을 사용해 만드는 메서드 (심볼)
+    // ...
+}
+
+ * MyClass는 constructor의 코드를 본문으로 갖는 함수이다. 
+ * MyClass에서 정의한 일반 메서드나 getter, setter는 MyClass.prototype에 쓰인다.
+ */
+
