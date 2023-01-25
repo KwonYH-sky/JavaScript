@@ -438,7 +438,7 @@ class Clock {
     }
 
     stop = function () {
-        clearInterval(timer);
+        clearInterval(this.timer);
     };
     start = function () {
         this.render();
