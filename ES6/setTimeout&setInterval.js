@@ -216,7 +216,7 @@ setTimeout(() => alert("World"));
 alert("Hello");
 
 /* 예시에서 첫 번째 줄은 '0밀리초 후에 함수 호출하기'라는 할 일을 '계획표에 기록'해주는 역할을 한다.
-   그런데 스케줄러는 현재 스크립트(alert 함수)의 실행이 종료되고 나서야 '계획표에 어떤 할 일이 적혀있는지 확인'하므로 Hello가 먼저, Wolrd은 그다음에 출력된다.
+   그런데 스케줄러는 현재 스크립트(alert 함수)의 실행이 종료되고 나서야 '계획표에 어떤 할 일이 적혀있는지 확인'하므로 Hello가 먼저, World은 그다음에 출력된다.
 
    대기 시간이 0인 setTimeout을 활용한 브라우저 환경에서의 유스 케이스는 이벤트 루프와 매크로태스크, 마이크로태스크 등이 있다.
 */
@@ -257,12 +257,121 @@ alert("Hello");
  * 대기 시간이 0인 setTimeout(setTimeout(func, 0) 혹은 setTimeout(func))을 상요하면 '현재 스크립트의 실행이 완료된 후 가능한 빠르게' 원하는 함수를 호출할 수 있다.
  * 지연 없이 중첩 setTimeout을 5회 이상 호출하거나 지연 없는 setInterval에서 호출이 5회 이상 이뤄지면, 4밀리초 이상의 지연 간격이 강제로 더해진다.
     이는 브라우저에만 적용되는 사항이며, 하위 호환성을 위해 유지되고 있다.
- * 
+ *
  * 스케줄링 메서드를 사용할 땐 명시한 지연 간격이 보장되지 않을 수도 있다는 점을 유의해야 한다.
  * 아래와 같은 상황에서 브라우저 내 타이머가 느려지면 지연 간격이 보장되지 않는다.
     * CPU가 과부하 상태인 경우
     * 브라우저 탭이 백그라운드 모드인 경우
     * 노트북이 배터리에 의존해서 구동 중인 경우
- * 이런 상황에서 타이머의 최소 지연 시간은 300밀리초에서 심하면 1,000밀리초까지 늘어난다. 
+ * 이런 상황에서 타이머의 최소 지연 시간은 300밀리초에서 심하면 1,000밀리초까지 늘어난다.
  * 연장 시간은 브라우저나 구동 중인 운영 체제의 성능 설정에 따라 다르다.
  */
+
+/////////////////////////////
+
+/** 
+ * 일초 간격으로 숫자 출력하기
+from에 명시한 숫자부터 to에 명시한 숫자까지 출력해주는 함수 printNumbers(from, to)를 만들어보세요. 숫자는 일 초 간격으로 출력되어야 합니다.
+
+두 가지 방법을 사용해 함수를 만드셔야 합니다.
+
+    1. setInterval을 이용한 방법
+    2. 중첩 setTimeout을 이용한 방법
+ */
+
+function printNumbers(from, to) {
+    let timerId = setInterval(() => {
+        if (from <= to) {
+            alert(from);
+            from++;
+        } else clearInterval(timerId);
+    }, 1000);
+}
+
+function printNumbers(from, to) {
+    let timeout = setTimeout(function print(from, to) {
+        if (from <= to) {
+            alert(from);
+            from++;
+        }
+        let timeout = setTimeout(print, 1000, from, to);
+    }, 1000, from, to);
+}
+
+/** 해답
+ * setInterval을 이용한 방법:
+
+function printNumbers(from, to) {
+  let current = from;
+
+  let timerId = setInterval(function() {
+    alert(current);
+    if (current == to) {
+      clearInterval(timerId);
+    }
+    current++;
+  }, 1000);
+}
+
+// usage:
+printNumbers(5, 10);
+
+ * 중첩 setTimeout을 이용한 방법:
+
+function printNumbers(from, to) {
+  let current = from;
+
+  setTimeout(function go() {
+    alert(current);
+    if (current < to) {
+      setTimeout(go, 1000);
+    }
+    current++;
+  }, 1000);
+}
+
+// usage:
+printNumbers(5, 10);
+
+두 방법 모두에서 최초 호출 이전에(첫 번째 얼럿 창이 뜨기 전에) 1000ms의 지연 간격을 두었다는 점에 주목해주시기 바랍니다.
+
+초기 지연시간 없이 함수를 바로 실행하려면 아래와 같이 별도의 줄에서 함수를 호출해줘야 합니다.
+
+function printNumbers(from, to) {
+  let current = from;
+
+  function go() {
+    alert(current);
+    if (current == to) {
+      clearInterval(timerId);
+    }
+    current++;
+  }
+
+  go();
+  let timerId = setInterval(go, 1000);
+}
+
+printNumbers(5, 10);
+ */
+
+/** setTimeout 은 무엇을 보여줄까요?
+ * 아래 코드에선 setTimeout을 이용해 호출을 스케줄링하고 있습니다. 그런데 그 아래 코드에선 실행 시간이 100ms 이상 걸리는 무거운 작업을 하고 있네요.
+ * 이런 경우 setTimeout에 넘겨준 함수는 언제 실행될까요?
+    1. 반복문 실행 후
+    2. 반복문 실행 전
+    3. 반복문이 실행되는 시점
+ * 얼럿창엔 어떤 값이 출력될까요?
+
+    let i = 0;
+
+    setTimeout(() => alert(i), 100); // 100000000
+
+    // 아래 반복문을 다 도는 데 100ms 이상의 시간이 걸린다고 가정합시다.
+    for(let j = 0; j < 100000000; j++) {
+    i++;
+    }
+
+ */
+/* setTimeout은 현재 실행 중인 코드의 실행이 종료되었을 때 실행됩니다.
+   반복문 실행이 종료되고 난 후 i는 100000000이 되므로, 얼럿창엔 100000000이 출력됩니다. */
