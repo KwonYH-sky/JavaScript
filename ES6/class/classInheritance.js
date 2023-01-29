@@ -82,7 +82,79 @@ new User().sayHi(); // Hello
 
 ////////////////////////////////////////////////
 
-/** 
- * 
- * 
+/** 메서드 오버라이딩
+ * 특별한 사항이 없으면 class Rabbit은 class Animal에 있는 메서드를 '그대로' 상속받는다.
+ * 그런데 Rabbit에서 stop() 등의 메서드를 자체적으로 정의하면, 상속받은 메서드가 아닌 자체 메서드가 사용된다. 
  */
+
+class Rabbit extends Animal {
+    stop() {
+        // rabbit.stop()을 호출할 때
+        // Animal의 stop()이 아닌, 이 메서드가 사용된다.
+    }
+}
+
+/* 개발을 하다 보면 부모 메서드 전체를 교체하지 않고, 부모 메서드를 토대로 일부 기능만 변경하고 싶을 때가 생긴다.
+ * 부모 메서드의 기능을 확장하고 싶을 때도 포함해서 이럴 때 커스텀 메서드를 만들어 작업하게 되는데, 
+ * 이미 커스텀 메서드를 만들었더라도 이 과정 전 후에  부모 메서드를 호출하고 싶을 때가 있다.
+ * 
+ * 키워드 super는 이럴 때 사용한다.
+    * super.method(...)는 부모 클래스에 정의된 메서드, method를 호출한다.
+    * super(...)는 부모 생성자를 호출하는데, 자식 생성자 내부에서만 사용 할 수 있다.
+ * 이런 특징을 이용해 토끼가 멈추면 자동을 숨도록 하는 코드를 만들어보자.
+ */
+class Animal {
+    constructor(name) {
+        this.name = name;
+        this.speed = 0;
+    }
+
+    run(speed) {
+        this.speed = speed;
+        alert(`${this.name}가 속도 ${this.speed}로 달립니다.`);
+    }
+
+    stop() {
+        this.speed = 0;
+        alert(`${this.name}가 멈췄습니다.`);
+    }
+}
+
+class Rabbit extends Animal {
+    hide() {
+        alert(`${this.name}가 숨었습니다.`);
+    }
+
+    stop() {
+        super.stop(); // 부모 클래스의 stop을 호출해 멈추고,
+        this.hide(); // 숨습니다.
+    }
+}
+
+rabbit = new Rabbit("흰 토끼");
+
+rabbit.run(5); // 흰 토끼가 속도 5로 달립니다.
+rabbit.stop(); // 흰 토끼가 멈췄습니다. 흰 토끼가 숨었습니다.
+
+/* Rabbit은 이제 실행 중간에 부모 클래스에 정의된 메서드 super.stop()을 호출하는 stop을 가지게 되었다. */
+
+/** 화살표 함수엔 super가 없다
+ * 화살표 함수는 super를 지원하지 않는다.
+ * super에 접근하면 아래 예시와 같이 super를 외부 함수에서 가져온다.
+
+    class Rabbit extends Animal {
+        stop() {
+            setTimeout(() => super.stop(), 1000); // 1초 후에 부모 stop을 호출한다.
+        }
+    }
+
+ * 화살표 함수의 super는 stop()의 super와 같아서 위 예시는 의도한 대로 동작한다.
+ * 그렇지만 setTimeout안에서 '일반'함수를 사용했다면 에러가 발생했을 겁니다.
+
+    // Unexpected super
+    setTimeout(function () { super.stop() }, 1000);
+
+ */
+
+/////////////////////////////////////////////////////////
+
