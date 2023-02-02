@@ -307,3 +307,224 @@ new Rabbit(); // rabbit
 
 ///////////////////////////////////////////////////////////////////////
 
+/** super 키워드와 [[HomeObject]]
+ * super에 대해서 좀 더 자세히 알아보자.
+ * 지금까지 배운 내용만으론 super가 제대로 동작하지 않는다.
+ * 내부에서 super는 어떻게 동작할까?
+ * 객체 메서드가 실행되면 현재 객체가 this가 된다. 이 상태에서 super.method()를 호출하면 엔진은 현재 객체의 프로토타입에서 method를 찾아야한다.
+ * 그런데 이런 과정은 '어떻게' 일어날까?
+ * 
+ * 엔진은 현재 객체 this을 알기 때문에 this.__proto__.method를 통해 부모 객체의 method를 찾을 것 같지만 그렇지 않다.
+ * 간결성을 위해 클래스가 아닌 일반 객체를 사용해 예시를 구성해보자.
+ * 아래 예시의 rabbit.__proto__은 animal이다. rabbit.eat()에서 this.__proto__를 사용해 animal.eat()을 호출해본다.
+ */
+
+animal = {
+    name: "동물",
+    eat() {
+        alert(`${this.name} 이/가 먹이를 먹는다.`);
+    }
+};
+
+rabbit = {
+    __proto__: animal,
+    name: "토끼",
+    eat() {
+        // 예상대로라면 super.eat()이 동작해야 한다.
+        this.__proto__.eat.call(this); // (*)
+    }
+};
+
+rabbit.eat(); // 토끼 이/가 먹이를 먹는다.
+
+/* (*)로 표시한 줄에선 eat을 프로토타입(animal)에서 가져오고 현재 객체의 컨텍스트에 기반하여 eat을 호출한다.
+ * 여기서 주의해서 봐야 할 부분은 .call(this)이다. 
+ * this.__proto__.eat()만 있으면 현재 객체가 아닌 프로토타입의 컨텍스트에서 부모 eat을 실행하기 때문에 .call(this)가 있어야 ㅎ나다.
+ * 
+ * 예시를 실행하면 예상한 내용이 얼럿창에 출력되는 것을 확인할 수 있다.
+ * 이제 체인에 객체를 하나 더 추가하면 문제가 발생하기 시작한다.
+ */
+
+animal = {
+    name: "동물",
+    eat() {
+        alert(`${this.name} 이/가 먹이를 먹는다.`);
+    }
+};
+
+rabbit = {
+    __proto__: animal,
+    name: "토끼",
+    eat() {
+        // call을 사용해 컨텍스트를 옮겨가며 부모(animal) 메서드를 호출한다.
+        this.__proto__.eat.call(this); // (*)
+    }
+};
+
+let longEar = {
+    __proto__: rabbit,
+    eat() {
+        // longEar를 가지고 무언가를 하면서 부모(rabbit) 메서드를 호출한다.
+        this.__proto__.eat.call(this); // (**)
+    }
+};
+
+longEar.eat(); // RangeError: Maximum call stack exceeded
+
+/* 예상과 달리 longEar.eat()를 호출하니 에러가 발생한다.
+ * longEar.eat()이 호출될 때 어떤 일이 발생하는지 하나씩 추적하다보면 이유룰 알 수 있다.
+ * 먼저 살펴봐야 할 것은 (*)과 (**)로 표사한 줄이다. 이 두 줄에서 this는 현재 객체인 longEar가 된다.
+ * 여기서 핵심이 있다. 모든 객체 메서드는 프로토타입 등이 아닌 현재 객체를 this로 갖는다.
+ * 
+ * 따라서 (*)과 (**)로 표시한 줄의 this.__proto__엔 정확히 같은 값, rabbit이 할당된다.
+ * 체인 위로 올라가지 않고 양쪽 모두에 rabbit.eat을 호출하기 때문에 무한 루프에 빠지게 된다.
+ * 
+ * 다음과 같은 과정이 이루어진다.
+    * 1. longEar.eat() 내부의 (**)로 표시한 줄에서 rabbit.eat을 호출하는데, 이때 this는 longEar이다.
+        // longEar.eat()안의 this는 longEar다.
+        this.__proto__.eat.call(this) // (**)
+        // 따라서 윗줄은 아래와 같아진다.
+        longEar.__proto__.eat.call(this)
+        // longEar의 프로토타입은 rabbit이므로 위줄은 아래와 같아진다.
+        rabbit.eat.call(this);
+    * 2. rabbit.eat 내부의 (*)로 표시한 줄에서 체인 위쪽으로 있는 호출을 전달하여 했으나 this가 longEar이기 때문에 또다시 rabbit.eat을 호출된다.
+        // rabbit.eat()안의 this 역시 longEar이다.
+        this.__proto__.eat.call(this) // (*)
+        // 따라서 윗줄은 아래와 같다.
+        longEar.__proto__.eat.call(this)
+        // longEar의 프로토타입은 rabbit이므로 윗줄은 아래와 같아진다.
+        rabbit.eat.call(this);
+    * 3. 이런 내부 동작 때문에 rabbit.eat은 체인 위로 올라가지 못하고 계속 자기 자신을 호출해 무한 루프에 빠지게 된다.
+ * 이런 문제는 this만으로 해결하지 못한다.
+ */
+
+/** [[HomeObject]]
+ * 자바스크립트엔 이런 문제를 해결할 수 있는 함수 전용 특수 내부 프로퍼티가 있다.
+ * 바로 [[HomeObject]]이다.
+ * 클래스이거나 객체 메서드인 함수의 [[HomeObject]] 프로퍼티는 해당 객체가 저장된다.
+ * super는 [[HomeObject]]를 이용해 부모 프로토타입과 메서드를 찾는다.
+ * 예시를 통해 [[HomeObject]]가 어떻게 동작하는지 살펴보자. 먼저 일반 객체를 이용해 본다.
+ */
+
+animal = {
+    name: "동물",
+    eat() {           // animal.eat.[[HomeObject]] == animal
+        alert(`${this.name} 이/가 먹이를 먹는다.`);
+    }
+};
+
+rabbit = {
+    __proto__: animal,
+    name: "토끼",
+    eat() {          // rabbit.eat.[[HomeObject]] == rabbit
+        super.eat();
+    }
+};
+
+longEar = {
+    __proto__: rabbit,
+    name: "귀가 긴 토끼",
+    eat() {         // longEar.eat.[[HomeObject]] == longEar
+        super.eat();
+    }
+};
+
+// 이제 제대로 동작한다.
+longEar.eat(); // 귀가 긴 토끼 이/가 먹이를 먹는다.
+
+/* [[HomeObject]]의 매커니즘 덕분에 메서드가 의도한 대로 동작하는 것을 확인해 보았다.
+ * 이렇게 longEar.eat같은 객체 메서드는 [[HomeObject]]를 알고 있기 때문에 
+ * this 없이도 프로토타입으로부터 부모 메서드를 가져올 수 있다.
+ */
+
+/** 메서드는 자유롭지 않다.
+ * 자바스크립트에서 함수는 대개 객체에 묶이지 않고 '자유롭다'. 이런 자유성 때문에 this가 달라도 객체 간 메서드를 복사하는 것이 가능하다.
+ * 그런데 [[HomeObject]]는 그 존재만으로도 함수의 자유도를 파괴한다.
+ * 메서드가 객체를 기억하기 때문이다.
+ * 개발자가 [[HomeObject]]를 변경할 방법은 없기 때문에 한 번 바인딩 된 함수는 더 이상 변경되지 않는다.
+ * 
+ * 다행인 점은 [[HomeObject]]는 오직 super 내부에서만 유효하다는 것이다. 
+ * 그렇기 때문에 메서드에서 super를 사용하지 않는 경우엔 메서드의 자유성이 보장된다.
+ * 객체 간 복사 역시 가능하다. 하지만 메서드에서 super를 사용하면 이야기가 달라진다.
+ * 
+ * 객체 간 메서드를 잘못 복사한 경우에 super가 제대로 동작하지 않을 경우를 살펴보자
+ */
+
+animal = {
+    sayHi() {
+        console.log('나는 동물입니다.');
+    }
+};
+
+// rabbit은 animal을 상속받는다.
+rabbit = {
+    __proto__: animal,
+    sayHi() {
+        super.sayHi();
+    }
+};
+
+let plant = {
+    sayHi() {
+        console.log("나는 식물입니다.");
+    }
+};
+
+// tree는 plant를 상속받는다.
+let tree = {
+    __proto__: plant,
+    sayHi: rabbit.sayHi // (*)
+}
+
+tree.sayHi(); // 나는 동물입니다.
+
+/* tree.sayHi()를 호출하니 "나는 동물입니다."가 출력된다. 
+ * 원인은 꽤 단순하다.
+    * (*)로 표시한 줄에서 메서드 tree.sayHi는 중복 코드를 방지하기 위해 rabbit에서 메서드를 복사해왔다.
+    * 그런데 복사해온 메서드는 rabbit에서 생성했기 때문에 이 메서드의 [[HomeObject]]는 rabbit이다.
+        개발자는 [[HomeObject]]를 변경할 수 없다.
+    * tree.sayHi()의 코드 내부엔 super.sayHi()가 있다. rabbit의 포로토타입은 animal이므로 
+        super는 체인 위에 있는 animal로 올라가 sayHi를 찾는다.
+ */
+
+/** 함수 프로퍼티가 아닌 메서드 사용하기
+ * [[HomeObject]]는 클래스와 일반 객체의 메서드에서 정의된다. 
+ * 그런데 객체 메서드의 경우 [[HomeObject]]가 제대로 동작하게 하려면 메서드를 반드시 method() 형태로 정의해야한다.
+ * "method: function()" 형태로 정의하면 안된다.
+ * 
+ * 개발자 입장에선 두 방법의 차이는 그리 중요하지 않을 수 있지만, 자바스크립트 입장에선 아주 중요하다.
+ * 메서드 문법이 아닌(non-method syntax)함수 프로퍼티를 사용해 예시를 작성해 보면 다음과 같다.
+ * [[HomeObject]] 프로퍼티가 설정되지 않기 때문에 상속이 제대로 동작하지 않는 것을 확일 할 수 있다.
+ */
+
+animal = {
+    eat: function () { // 'eat() {...' 대신 'eat:function() {...'을 사용해보자.
+        // ...
+    }
+};
+
+rabbit = {
+    __proto__: animal,
+    eat: function () {
+        super.eat();
+    }
+};
+
+rabbit.eat(); //SyntaxError: 'super' keyword unexpected here ([[HomeObject]]가 없어서 에러가 발생함)
+
+////////////////////////////////////////////////////////////////////
+
+/** 요약
+ * 1. 클래스 확장하기: class Child extends Parent
+    * Child.prototype.__proto__가 Parent.prototype이 되므로 메서드 전체가 상속된다.
+ * 2. 생성자 오버라이딩:
+    * this를 사용하기 전에 Child 생성자 안에서 super()로 부모 생성자를 반드시 호출해야 한다.
+ * 3. 메서드 오버라이딩:
+    * Child에 정의된 메서드에서 super.method()를 사용해 Parent에 정의된 메서드를 사용할 수 있다.
+ * 4. super 키워드와 [[HomeObject]]
+    * 메서드는 내부 프로퍼티 [[HomeObject]]에 자신이 정의된 클래스와 객체를 기억해놓는다.
+        super는 [[HomeObject]]를 사용해 부모 메서드를 찾는다.
+    * 따라서 super가 있는 메서드는 객체 간 복사 시 제대로 동작하지 않을 수 있다.
+ * 추가 사항:
+    * 화살표 함수는 this나 super를 갖지 않으므로 주변 컨텍스트에 잘 들어 맞는다.
+ */
