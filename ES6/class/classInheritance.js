@@ -528,3 +528,139 @@ rabbit.eat(); //SyntaxError: 'super' keyword unexpected here ([[HomeObject]]가 
  * 추가 사항:
     * 화살표 함수는 this나 super를 갖지 않으므로 주변 컨텍스트에 잘 들어 맞는다.
  */
+
+////////////////////////////////////////
+
+/** 인스턴스 생성 오류
+ * 아래 코드에서 Rabbit은 Animal을 상속받습니다.
+ * 그런데 Rabbit 객체를 만들 수가 없습니다. 무엇이 잘못된 것일까요? 코드를 수정해보세요.
+
+class Animal {
+
+  constructor(name) {
+    this.name = name;
+  }
+
+}
+
+class Rabbit extends Animal {
+  constructor(name) {
+    this.name = name;
+    this.created = Date.now();
+  }
+}
+
+let rabbit = new Rabbit("White Rabbit"); // Error: this is not defined
+alert(rabbit.name);
+
+ */
+
+class Animal {
+
+    constructor(name) {
+        this.name = name;
+    }
+
+}
+
+class Rabbit extends Animal {
+    constructor(name) {
+        super(name);
+        this.created = Date.now();
+    }
+}
+
+rabbit = new Rabbit("White Rabbit");
+alert(rabbit.name);
+
+/** 해답
+ * 자식 클래스의 생성자에서 super()를 호출하지 않아 에러가 발생했습니다.
+ * 수정 후 코드는 다음과 같습니다.
+
+class Animal {
+
+  constructor(name) {
+    this.name = name;
+  }
+
+}
+
+class Rabbit extends Animal {
+  constructor(name) {
+    super(name);
+    this.created = Date.now();
+  }
+}
+
+let rabbit = new Rabbit("White Rabbit"); // 잘 동작합니다.
+alert(rabbit.name); // White Rabbit
+
+ */
+
+/** 시계 확장하기
+ * 매 초마다 시간을 출력해주는 클래스 Clock이 있습니다.
+
+class Clock {
+  constructor({ template }) {
+    this.template = template;
+  }
+
+  render() {
+    let date = new Date();
+
+    let hours = date.getHours();
+    if (hours < 10) hours = '0' + hours;
+
+    let mins = date.getMinutes();
+    if (mins < 10) mins = '0' + mins;
+
+    let secs = date.getSeconds();
+    if (secs < 10) secs = '0' + secs;
+
+    let output = this.template
+      .replace('h', hours)
+      .replace('m', mins)
+      .replace('s', secs);
+
+    console.log(output);
+  }
+
+  stop() {
+    clearInterval(this.timer);
+  }
+
+  start() {
+    this.render();
+    this.timer = setInterval(() => this.render(), 1000);
+  }
+}
+
+ * Clock을 상속받는 ExtendedClock을 만들고, precision(정확도)이라는 매개변수도 추가해보세요.
+ * precision은 ‘초’ 사이의 간격을 의미하고, 기본값은 1000(1초)이 되어야 합니다.
+ */
+
+class ExtendedClock extends Clock {
+    constructor({ template, precision = 1000 }) {
+        super({ template });
+        this.precision = precision;
+    }
+    start() {
+        this.render();
+        this.timer = setInterval(() => this.render(), this.precision);
+    }
+}
+
+/** 해답
+class ExtendedClock extends Clock {
+  constructor(options) {
+    super(options);
+    let { precision = 1000 } = options;
+    this.precision = precision;
+  }
+
+  start() {
+    this.render();
+    this.timer = setInterval(() => this.render(), this.precision);
+  }
+};
+ */
