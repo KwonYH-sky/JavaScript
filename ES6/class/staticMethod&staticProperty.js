@@ -94,6 +94,105 @@ alert(article.title); // Today's digest
 
 /////////////////////////////////////////////
 
-/* 
- * 
+/** 정적 프로퍼티
+    * 스펙에 추가된지 얼마 안된 문법이다. 예시는 Chrome에서만 동작할 수 있다.
+ * 정적 프로퍼티도 물론 만들 수 있다.
+ * 정적 프로퍼티는 일반 클래스 프로퍼티와 유사하게 생겼는데 앞에 static이 붙는다는 점만 다르다.
  */
+
+class Article {
+    static publisher = "Ilya Kantor";
+}
+
+alert(Article.publisher); // Ilya Kantor
+
+/* 위 예시는 Article에 프로퍼티를 직접 할당한 것과 동일하게 동적한다. */
+
+Article.publisher = "Ilya Kantor";
+
+/** 정적 프로퍼티와 메서드 상속
+ * 정적 프로퍼티와 메서드는 상속된다.
+ * 
+ * 아래 예시에서 Animal.compare와 Animal.planet은 상속되어서 
+ * 각각 Rabbit.compare와 Rabbit.planet에서 접근할 수 있다.
+ */
+
+class Animal {
+    static planet = "지구";
+
+    constructor(name, speed) {
+        this.speed = speed;
+        this.name = name;
+    }
+
+    run(speed = 0) {
+        this.speed += speed;
+        alert(`${this.name}가 속도 ${this.speed}로 달립니다.`);
+    }
+
+    static compare(animalA, animalB) {
+        return animalA.speed - animalB.speed;
+    }
+}
+
+class Rabbit extends Animal {
+    hide() {
+        alert(`${this.name}가 숨었습니다!`);
+    }
+}
+
+let rabbits = [
+    new Rabbit("흰 토끼", 10),
+    new Rabbit("검은 토끼", 5)
+];
+
+rabbits.sort(Rabbit.compare);
+
+rabbits[0].run(); // 검은 토끼가 속도 5로 달립니다.
+
+alert(Rabbit.planet); // 지구
+
+/* 이제 Rabbit.compare을 호출하면 Animal.compare가 호출된다.
+ * 이게 가능한 이유는 프로토타입 때문이다.
+ * extends 키워드는 Rabbit의 [[Prototype]]이 Animal을 참조하도록 해준다.
+ * 
+ * 따라서 Rabbit extends Animal은 두 개의 [[Prototype]] 참조를 만들어 낸다.
+    * 1. 함수 Rabbit은 프로토타입을 통해 함수 Animal을 상속받는다.
+    * 2. Rabbit.prototype은 프로토타입을 통해 Animal.prototype을 상속받는다.
+ * 이런 과정이 있기 때문에 일반 메서드 상속과 정적 메서드 상속이 가능하다.
+ */
+
+class Animal { }
+class Rabbit extends Animal { }
+
+// 정적 메서드
+alert(Rabbit.__proto__ === Animal);
+
+// 일반 메서드
+alert(Rabbit.prototype.__proto__ === Animal.prototype);
+
+///////////////////////////////
+
+/** 요약
+ * 정적 메서드는 특정 클래스 인스턴스가 아닌 클래스 '전체'에 필요한 기능을 만들 때 사용할 수 있다.
+ * 인스턴스끼리 비교해주는 메서드 Article.compare(article1, article2)이난 팩토리 메서드 Article.createTodays()를 만들 때 정적 메서드가 쓰인다.
+ * 정적 메서드는 클래스 선언부 안에 위치하고 앞에 static이라는 키워드가 붙는다.
+ * 정적 프로퍼티는 데이터를 틀래스 수준에 저장하고 싶을 때 사용한다. 정적 프로퍼티 역시 개별 인스턴스에 묶이지 않는다.
+ *
+ * 문법:
+    class MyClass {
+        static property = ...;
+
+        static method() {
+            ...
+        }
+    }
+ * static을 사용한 선언은 기술적으론 클래스 자체에 직접 할당하는 것과 동일하다.
+    MyClass.property = ...
+    MyClass.method = ...
+ * 정적 프로퍼티와 정적 메서드는 상속이 가능하다.
+ * class B extends A는 클래스 B의 프로토타입이 클래스 A를 가리기게한다(B.[[Prototype]] = A).
+ * 따라서 B에서 원하는 프로퍼티나 메서드를 찾지 못하면 A로 검색이 이어진다.
+ */
+
+////////////////////////////////////////////////////////////
