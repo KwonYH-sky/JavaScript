@@ -196,3 +196,61 @@ alert(Rabbit.prototype.__proto__ === Animal.prototype);
  */
 
 ////////////////////////////////////////////////////////////
+
+/** Object를 상속받는 클래스
+ * 아시다시피, 객체는 보통 Object.prototype를 상속받고 
+ * hasOwnProperty같은 ‘일반’ 객체 메서드에 접근할 수 있습니다.
+ * 
+ * 예시:
+class Rabbit {
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+let rabbit = new Rabbit("Rab");
+
+// 메서드 hasOwnProperty는 Object.prototype에서 왔습니다.
+alert( rabbit.hasOwnProperty('name') ); // true
+
+ * 그런데 "class Rabbit extends Object"같이 상속을 명시적으로 해주는 경우와 
+ * 그냥 "class Rabbit"를 사용하는 경우, 결과가 다를까요?
+ * 만약 다르다면 어떤 것이 다를까요?
+ * 아래 예시에서 "class Rabbit extends Object"를 사용한 코드가 있는데, 
+ * 실행해보면 동작하지 않습니다. 어디서 문제가 생긴걸까요? 코드를 수정해보세요.
+class Rabbit extends Object {
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+let rabbit = new Rabbit("Rab");
+
+alert( rabbit.hasOwnProperty('name') ); // Error
+ */
+
+class Rabbit extends Object {
+    constructor(name) {
+      super();
+      this.name = name;
+    }
+}
+  
+alert( Rabbit.hasOwnProperty('name') );
+
+/** 해답
+class Rabbit extends Object {
+  constructor(name) {
+    super(); // 상속 클래스의 생성자에선 부모 생성자를 반드시 호출해야 합니다.
+    this.name = name;
+  }
+}
+
+let rabbit = new Rabbit("Rab");
+
+alert( rabbit.hasOwnProperty('name') ); // true 
+ * ‘extends’ 문법은 두 개의 프로토타입을 설정합니다.
+    * 1. 생성자 함수의 "prototype" 사이(일반 메서드용)
+    * 2. 생성자 함수 자체 사이(정적 메서드용)
+ * 따라서 Rabbit은 아래와 같이 Rabbit을 통해 Object의 정적 메서드에 접근할 수 있습니다.
+ */
