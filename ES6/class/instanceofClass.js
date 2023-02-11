@@ -179,3 +179,26 @@ alert( {}.toString.call(new XMLHttpRequest()) ); // [object XMLHttpRequest]
  * 앞서 보았듯이 {}.toString은 typeof보다 '기능이 더' 많다.
  * instanceof 연산자는 계층 구조를 가진 클래스를 다룰 때나 클래스의 상속 여부를 확인하고자 할 때 그 진가를 발휘한다.
  */
+
+////////////////////////////////////////////////////////////////
+
+/** 이상한 instanceof
+ * 아래 예시에서 a는 B()를 통해 생성하지 않았습니다. 그런데도 instanceof는 왜 true를 반환할까요?
+function A() {}
+function B() {}
+
+A.prototype = B.prototype = {};
+
+let a = new A();
+
+alert( a instanceof B ); // true
+ */
+// a의 프로토타입이 B 프로토타입을 가리키기 때문
+/* 해답
+instanceof는 평가 시, 함수는 고려하지 않고 평가 대상의 prototype을 고려합니다. 
+평가 대상의 prototype이 프로토타입 체인 상에 있는 프로토타입과 일치하는지 여부를 고려하죠.
+
+문제에서 a.__proto__ == B.prototype이므로, instanceof는 true를 반환합니다.
+
+instanceof의 내부 알고리즘에 의해 prototype은 생성자 함수가 아닌 타입을 정의합니다.
+*/
