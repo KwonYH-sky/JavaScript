@@ -120,3 +120,89 @@ try {
  */
 
 ///////////////////////////////////////////////////////////////
+
+/** 더 깊게 상속하기
+ * 앞서 만든 ValidationError 클래스는 너무 포괄적이어서 뭔가 잘못될 확률이 있다.
+ * 꼭 필요한 프로퍼티가 누락되거나 age에 문자열값이 들어가는 것처럼 형식이 잘못된 경우를 처리할 수 없다.
+ * 필수 프로퍼티가 없는 경우에 대응할 수 있도록 좀 더 구체적인 클래스 PropertyRequiredError를 만들어 보자.
+ * PropertyRequiredError엔 누락된 프로퍼티에 대한 추가 정보가 담겨야 한다.
+ */
+
+class ValidationError extends Error {
+    constructor(message) {
+        super(message); 
+        this.name = "ValidationError"; 
+    }
+}
+
+class PropertyRequiredError extends ValidationError {
+    constructor(property) {
+        super("No property: " + property);
+        this.name = "PropertyRequiredError";
+        this.property = property;
+    }
+}
+
+// 사용법
+function readUser(json) {
+    let user = JSON.parse(json);
+
+    if (!user.age) {
+        throw new PropertyRequiredError("age");
+    }
+    if (!user.name) {
+        throw new PropertyRequiredError("name");
+    }
+
+    return user;
+}
+
+// try..catch와 readUser를 함께 사용하면 다음과 같다.
+try {
+    let user = readUser('{"age":25}');
+} catch (err) {
+    if (err instanceof ValidationError) {
+        alert("Invalid data: " + err.message); // Invalid data: No property: name
+        alert(err.name); // PropertyRequiredError
+        alert(err.property); // name
+    } else if (err instanceof SyntaxError) { 
+        alert("JSON Syntax Error: " + err.message);
+    } else {
+        throw err; // 알려지지 않은 에러는 재던지기 한다.
+    }
+}
+
+/* 새롭게 만든 클래스 PropertyRequiredError는 사용하기 쉽다. 
+ * new PropertyRequiredError(property)처럼 프로퍼티 이름을 전달하기만 하면 된다. 사람이 읽을 수 있는 message는 생성자가 알아서 만들어 준다.
+ * 
+ * 여기서 주목할 점은 PropertyRequiredError 생성자 안에서 this.name을 수동으로 할당해 주었다는 것이다.
+ * 그런데 어떻게 매번 커스텀 에러 클래스의 생성자 안에서 this.name을 할당해 주는 것은 귀찮은 작업이다.
+ * 이런 번거로운 작업은 '기본 에러' 클래스를 만들고 커스텀 에러들이 이 클래스를 상속받게 하면 피할 수 있다.
+ * 기본 에러 생성자에 this.name = this.constructor.name를 추가하면 된다.
+ * 
+ * 기본 에러 클래스를 MyError라고 부르겠다.
+ * MyError를 사용하면 다음과 같이 커스텀 에러 클래스를 간결하게 할 수 있다.
+ */
+class MyError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = this.constructor.name;
+    }
+}
+
+class ValidationError extends MyError {}
+
+class PropertyRequiredError extends ValidationError {
+    constructor(property) {
+        super("No property: " + property);
+        this.property = property;
+    }
+}
+
+// 제대로 된 이름이 출력된다.
+alert(new PropertyRequiredError("field").name); // PropertyRequiredError
+
+/* "this.name = ..."이 사라졌기 때문에 ValidationError같은 커스텀 에러의 생성자가 더 깔끔해진 것을 확인 할 수 있다. */
+
+/////////////////////////////////////
+
