@@ -206,3 +206,124 @@ alert(new PropertyRequiredError("field").name); // PropertyRequiredError
 
 /////////////////////////////////////
 
+/** 예외 감싸기
+ * 함수 readUser는 '사용자 데이터를 읽기' 위한 용도로 만들어졌다.
+ * 그런데 사용자 데이터를 읽는 과정에서 다른 오류가 발생할 수 있다.
+ * 지금 당장은 SyntaxError와 ValidationError를 사용해 에러를 처리하고 있는데, 
+ * 앞으로 readUser가 더 커지면 다른 커스텀 에러 클래스를 만들어야한다.
+ * 
+ * readUser를 호출하는 곳에선 새롭게 만들어질 커스텀 에러들을 처리할 수 있어야한다.
+ * 그런데 지금은 catch 블록 안에 if 문 여러 개를 넣어 종류를 알 수 있는 에러를 처리하고, 
+ * 그렇지 않는 에러는 다시 던지기를 해 처리하고 있는 실정이다.
+ * 
+ * 현재 에러 처리 스키마는 다음과 같다.
+ */
+try {
+    //...
+    readUser() // 잠재적 에러 발생처
+    //...
+} catch (err) {
+    if (err instanceof ValidationError) {
+        // validation 에러 처리
+    } else if (err instanceof SyntaxError) {
+        // 문법 에러 처리
+    } else {
+        throw err; // 알 수 없는 에러는 다시 던지기 함
+    }
+}
+
+/* 위 스키마엔 두 종류의 에러만 나와 있다. 그런데 에러 종류는 더 추가될 수 있다.
+ * 이쯤되면, "미래에 readUser 기능이 커지면서 에러 종류가 많아질 텐데 그때마다 에러 종류에 따라 에러 처리 분기문을 매번 추가해야 하나"라는 의문이 생긴다.
+ * 보통은 그렇지 않다. 실제로 우리가 필요로 하는 정보는 '데이터를 읽을 때' 에러가 발생했는지에 대한 여부이다.
+ * 왜 에러가 발생했는지와 자세한 설명은 대부분의 경우 필요하지 않는다.
+ * 필요할 때 에러 세부사항에 대한 정보를 얻을 수 있는 방법이 있다면 더 좋겠지만 말이다.
+ * 
+ * 이런 에러 처리 기술은 '예외 감싸기(wrapping exception)'라고 부른다. 예외 감싸기는 다음과 같은 순서로 진행된다.
+    * 1. '데이터 읽기'와 같은 포괄적인 에러를 대변하는 새로운 클래스 ReadError를 만든다.
+    * 2. 함수 readUser 발생한 ValidationError, SyntaxError 등의 에러는 readUser 내부에서 잡고 이때 ReadError를 생성한다.
+    * 3. ReadError 객체의 cause 프로퍼티엔 실제 에러에 대한 참조가 저장된다.
+ *  이렇게 예외 감싸기 기술을 써 스키마를 변경하면 readUser를 호출하는 코드에선 ReadError만 확인하면 된다.
+ * 데이터를 읽을 때 발생하는 에러 종류 전체를 확인하지 않아도 된다. 추가 정보가 필요한 경우엔 cause 프로퍼티를 확인하면 된다.
+ * 
+ * 이제 실제로 ReadError를 정의하고 이를 사용해보도록 하자. 
+ * ReadError는 readUser와 try..catch 안에서 다음과 같은 형태로 사용할 수 있다.
+ */
+
+class ReadError extends Error {
+    constructor(message, cause) {
+        super(message);
+        this.cause = cause;
+        this.name = 'ReadError';
+    }
+}
+
+class ValidationError extends Error {
+    constructor(message) {
+        super(message); 
+        this.name = "ValidationError"; 
+    }
+}
+
+class PropertyRequiredError extends ValidationError {
+    constructor(property) {
+        super("No property: " + property);
+        this.name = "PropertyRequiredError";
+        this.property = property;
+    }
+}
+
+function validateUser(user) {
+    if (!user.age) {
+        throw new PropertyRequiredError("age");
+    }
+    if (!user.name) {
+        throw new PropertyRequiredError("name");
+    }
+}
+
+function readUser(json) {
+    let user;
+
+    try {
+        user = JSON.parse(json);
+    } catch (err) {
+        if (err instanceof SyntaxError) {
+            throw new ReadError("Syntax Error", err);
+        } else {
+            throw err;
+        }
+    }
+
+    try {
+        validateUser(user);
+    } catch (err) {
+        if (err instanceof ValidationError) {
+            throw new ReadError("ValidationError", err);
+        } else {
+            throw err;
+        }
+    }
+    
+}
+
+try {
+    readUser('{잘못된 형식의 json}');
+} catch (e) {
+    if (e instanceof ReadError) {
+        alert(e);
+        // Original error: SyntaxError: Unexpected token b in JSON at position 1
+        alert("Original error: " + e.cause);
+    }else {
+        throw e;
+    }
+}
+
+/* 이제 readUser는 위에서 설명한 것처럼 동작한다. 
+ * Syntax 에러나 Validation 에러가 발생한 경우 해당 에러 자체를 다시 던지기 하기 않고 ReadError를 던지게 된다.
+ * 이렇게 되면, readUser를 호출하는 바깥 코드에선 instanceof ReadError 딱 하나만 확인하면 된다.
+ * 에러 처리 분기문을 여러 개 만들 필요가 없어진다.
+ * '예외 감싸기'란 이름은 종류별 에러를 좀 더 추상적인 에러, ReadError에 하나로 모아(wrap) 처리하기 때문에 붙여졌다.
+ * 이런 기법은 객체 지향 프로그래밍에서 널리 쓰이는 패턴이다.
+ */
+
+/////////////////////////////////////////////
