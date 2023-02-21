@@ -92,3 +92,82 @@ loadScript('https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.2.0/lodash.js', s
 
 //////////////////////////////////////////////////////
 
+/** 콜백 속 콜백
+ * 스크립트가 두 개 있는 경우, 어떻게 하면 두 스크립트를 순차적으로 불러올 수 있을까?
+ * 두 번째 스크립트 로딩은 첫 번째 스크립트의 로딩이 끝난 이후가 되길 원한다면 말이다.
+ * 
+ * 가장 자연스러운 해결 방법은 아래와 같이 콜백 함수 안에서 두 번째 loadScript를 호출하는 것이다.
+ */
+
+loadScript('/my/script.js', function (script) {
+    alert(`${script.src}을 로딩했습니다. 이젠, 다음 스크립트를 로딩합시다.`);
+
+    loadScript('/my/script2.js', function (script) {
+        alert('두 번째 스크립트를 성공적으로 로딩했습니다.');
+    });
+
+});
+
+/* 이렇게 중첩 콜백을 만들면 바깥에 위치한 loadScript가 완료된 후, 안쪽 loadScript가 실행된다.
+ * 그런데 여기에 더하여 스크립트를 하나 더 불러오고 싶다면 어떻게 해야 할까?
+ */
+
+loadScript('/my/script.js', function (script) {
+    
+    loadScript('/my/script2.js', function (script) {
+        
+        loadScript('/my/script3.js', function (script) {
+            // 세 스크립트 로딩이 끝난 후 실행됨
+        });
+
+    });
+
+});
+
+/* 위와 같이 모든 새로운 동작이 콜백 안에 위치하게 작성하면 된다.
+ * 그런데 이렇게 콜백 안에 콜백을 넣는 것은 수행하려는 동작이 단 몇 개뿐이라면 괜찮지만, 
+ * 동작이 많을 경우엔 좋지 않다.
+ */
+
+/////////////////////
+
+/** 에러 핸들링
+ * 앞서 본 예시들은 스크립트 로딩이 실패하는 경우 등의 에러를 고려하지 않고 작성되었다.
+ * 그런데 스크립트 로딩이 실패할 가능성은 언제나 있다.
+ * 물론 콜백함수는 이런 에러를 핸들링할 수 있어야 한다.
+ */
+
+function loadScript(src, callback) {
+    let script = document.createElement('script');
+    script.src = src;
+
+    script.onload = () => callback(null, script);
+    script.onerror = () => callback(new Error(`${src}를 불러오는 도중에 에러가 발생했습니다.`));
+
+    document.head.append(script);
+}
+
+/* 이제 loadScript는 스크립트 로딩에 성성하면 callback(null, script)을 실패하면 callback(error)을 호출한다.
+ * 
+ * 개선된 loadScript의 사용법은 다음과 같다.
+ */
+
+loadScript('/my/script.js', function (error, script) {
+    if (error) {
+        // 에러 처리
+    } else {
+        // 스크립트 로딩이 성공적으로 끝남
+    }
+});
+
+/* 이렇게 에러를 처리하는 방식은 흔히 사용되는 패턴이다.
+ * 이런 패턴은 '오류 우선 콜백(error-first callback)'이라고 불린다.
+ * 
+ * 오류 우선 콜백은 다음 관례를 따른다.
+    * 1. callback의 첫 번째 인수는 에러를 위해 남겨둔다. 에러가 발생하면 이 인수를 이용해 callback(err)이 호출된다.
+    * 2. 두 번째 인수(필요하면 인수를 더 추가할 수 있음)는 에러가 발생하지 않을 때를 위해 남겨둔다.
+        원하는 동작이 성공한 경우엔 callback(null, result1, result2...)이 호출된다.
+ * 오류 우선 콜백 스타일을 사용하면, 단일 콜백 함수에서 에러 케이스와 성공 케이스 모두를 처리할 수 있다.
+ */
+
+///////////////////////////////////////////////////////////////
