@@ -26,4 +26,18 @@ let promise = new Promise(function (resolve, reject) {
  * executor는 new Promise가 만들어질 때 자동으로 실행되는데, 결과를 최종적으로 만들어내는 제작 코드를 포함한다.
  * 위 비유에서 '가수'가 바로 executor이다.
  * 
+ * executor의 인수 resolve와 reject는 자바스크립트에서 자체 제공하는 콜백이다.
+ * 개발자는 resolve와 reject를 신경 쓰지 않고 executor 안 코드만 작성하면 된다.
+ * 
+ * 대신 executor에선 결과를 즉시 얻든 늦게 얻든 상관없이 상황에 따라 인수로 넘겨준 콜백 중 하나를 반드시 호출해야 한다.
+    * resolve(value) - 일이 성공적으로 끝난 경우 그 결과를 나타내는 value와 함께 호출
+    * reject(error) - 에러 발생 시 에러 객체를 나타내는 error와 함께 호출
+ * 요약하면 다음과 같다. 
+ * executor는 자동으로 실행되는데 여기서 원하는 일이 처리된다. 
+ * 처리가 끝나면 executor는 처리 성공 여부에 따라 resolve나 reject를 호출한다.
+ * 
+ * 한편, new Promise 생성자는 반환하는 promise 객체는 다음과 같은 내부 프로퍼티를 갖는다.
+    * state - 처음엔 "pending"(보류)이었다 resolve가 호출되면 "fulfilled", reject가 호출되면 "rejected"로 변한다.
+    * result - 처음엔 undefined이었다 resolve(value)가 호출되면 value로, reject(error)가 호출되면 error로 변한다.
+ * 
  */
