@@ -39,5 +39,78 @@ let promise = new Promise(function (resolve, reject) {
  * 한편, new Promise 생성자는 반환하는 promise 객체는 다음과 같은 내부 프로퍼티를 갖는다.
     * state - 처음엔 "pending"(보류)이었다 resolve가 호출되면 "fulfilled", reject가 호출되면 "rejected"로 변한다.
     * result - 처음엔 undefined이었다 resolve(value)가 호출되면 value로, reject(error)가 호출되면 error로 변한다.
+ * 따라서 executor는 promise의 상태를 둘 중 하나로 변화시킨다.
  * 
+ * promise 생성자와 간단한 executor 함수로 만든 예시이다. setTimeout을 이용해 executor 함수는 약간 시간이 걸리도록 구현한다.
  */
+promise = new Promise(function (resolve, reject) {
+    // 프라미스가 만들어지면 executor 함수는 자동으로 실행된다.
+
+    // 1초 뒤에 일이 성공적으로 끝났다는 신호가 전달되면서 result는 '완료'가 된다.
+    setTimeout(() => resolve("완료"), 1000);
+});
+
+/* 위 예시를 통해서 알 수 있는 것은 두가지이다.
+    * 1. executor는 new Promise.에 의해 자동으로 그리고 즉각적으로 호출된다.
+    * 2. executor는 인자로 resolve와 reject 함수를 받는다. 이 함수들은 자바스크립트 엔진이 미리 정의한 함수이므로 개발자가 따로 만들 필요가 없다.
+        다만, resolve나 reject 중 하나는 반드시 호출해야 한다.
+ * executor '처리'가 시작 된 지 1초 후, resolve("완료")가 호출되고 결과가 만들어진다.
+ * 이처럼 일이 성공적으로 처리되었을 때의 프라미스는 'fulfilled promise(약속이 이행된 프라미스)'라고 불린다.
+ * 
+ * 이번엔 executor가 에러와 함께 약속한 작업을 거부하는 경우를 살펴보자.
+ */
+promise = new Promise(function (resolve, reject) {
+    // 1초 뒤에 에러와 함께 실행이 종료되었다는 신호를 보낸다.
+    setTimeout(() => reject(new Error("에러 발생!")), 1000);
+});
+
+/* 1초 후 reject(...)가 호출되면 promise의 상태가 "rejected"로 변한다.
+ * 
+ * 앞서 다룬 내용을 요약하면,
+ * executor는 보통 시간이 걸리는 일을 수행한다. 
+ * 일이 끝나면 resolve나 reject 함수를 호출하는데, 이때 프라미스 객체의 상태가 변화한다.
+ * 
+ * 이행(resolved) 혹은 거부(rejected) 상태의 프라미스는 '처리된(settled)' 프라미스라고 부른다.
+ * 반대되는 프라미스로 '대기(pending)'상태의 프라미스가 있다.
+ */
+
+/** ! 프라미스는 성공 또는 실패만 한다.
+ * executor는 resolve나 reject 중 하나를 반드시 호출해야 한다. 이때 변경된 상태는 더 이상 변하지 않는다.
+ * 처리가 끝난 프라미스에 resolve와 reject를 호출하면 무시되어버린다.
+ */
+promise = new Promise(function (resolve, reject) {
+    resolve("완료");
+
+    reject(new Error("...")); // 무시됨
+    setTimeout(() => resolve("...")); // 무시됨
+});
+
+/* 이렇게 executor에 의해 처리가 끝난 일은 결과 홋은 에러만 가질 수 있다.
+ * 여기에 더하여 resolve나 reject는 인수를 하나만 받고(혹은 아무것도 받지 않음) 그 이외의 인수는 무시한다는 특성도 있다.
+ */
+
+/** ! Error 객체와 함께 거부하기
+ * 무언가 잘못된 경우, executor는 reject를 호출해야 한다. 
+ * 이때 인수는 resolve와 마찬가지로 어떤 타입도 가능하지만 
+ * Error 객체 또는 Error를 상속받은 객체를 사용할 것을 추천한다.
+ */
+
+/** ! resolve reject 함수 즉시 호출하기
+ * executor는 대개 무언가를 비동기적으로 수행하고, 약간의 시간이 지난 후에 resolve, reject를 호출하는데, 꼭 이렇게 할 필요는 없다.
+ * 아래와 같이 resolve나 reject를 즉시 호출할 수도 있다.
+    let promise = new Promise(function (resolve, reject) {
+        // 일이 끝마치는 데 시간이 들지 않음
+        resolve(123); // 결과(123)를 즉시 resolve에 전달함
+    });
+ * 어떤 일을 시작했는데 알고 보니 일이 이미 끝나 저장까지 되어있는 경우, 
+ * 어떻게 resolve나 reject를 즉시 호출하는 방식을 사용할 수 있다.
+ * 이렇게 하면 프라미스는 즉시 이행 상태가 된다.
+ */
+
+/** ! state와 result는 내부에 있다.
+ * 프라미스 객채의 state, result 프로퍼티는 내부 프로퍼티이므로 개발자가 직접 접근할 수 없다.
+ * 대신 .then/ .catch / .finally 메서드를 사용하면 접근 가능한다.
+ */
+
+//////////////////////////////////////////////
+
