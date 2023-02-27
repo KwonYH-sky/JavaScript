@@ -230,3 +230,56 @@ promise.then(alert); // 완료 (바료 출력됨)
 
 /////////////////////////////
 
+/** 예시: loadScript
+ * 콜백 때 스크립트 로딩에 사용되는 함수 loadScript를 작성해보자.
+ * 아래는 콜백 기반으로 작성한 함수이다.
+ */
+function loadScript(src, callback) {
+    let script = document.createElement('script');
+    script.src = src;
+
+    script.onload = () => callback(null, script);
+    script.onerror = () => callback(new Error(`${src}를 불러오는 도중에 에러가 발생함`));
+
+    document.head.append(script);
+}
+/* 이제 프라미스를 이용해 함수를 다시 작성해보자.
+ * 새로운 함수에선 콜백 함수 대신, 스크립트 로딩이 완전히 끝났을 때 이행되는 프라미스 객체를 만들고, 이를 반환해보자.
+ * 외부 코드에선 .then을 이용해 핸들러(구독 함수)를 더한다.
+ */
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        let script = document.createElement('script');
+        script.src = src;
+
+        script.onload = () => resolve(script);
+        script.onerror = () => reject(new Error(`${src}를 불러오는 도중에 에러가 발생함`));
+
+        document.head.append(script);
+    });
+}
+/* 사용법은 다음과 같다. */
+promise = loadScript("https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.js");
+
+promise.then(
+    script => alert(`${script.src}을 불러왔습니다!`),
+    error => alert(`Error: ${error.message}`)
+);
+
+promise.then(script => alert('또다른 핸들러...'));
+
+/* 프라미스를 사용한 코드가 콜백 기반 코드보다 더 나은 점을 정리하면 다음과 같다.
+    * 프라미스
+    1.프라미스를 이용하면 흐름이 자연스럽다. loadScript(script)로 스크립트를 읽고, 
+    결과에 따라 그다음(.then)에 무엇을 할지에 대한 코드를 작성하면 된다.
+    2.프라미스에 원하는 만큼 .then을 호출할 수 있다. .then을 호출하는 것은 새로운 '팬'(새로운 구독 함수)을
+    '구독 리스트'에 추가하는 것과 같다.
+    
+    * 콜백
+    1.loadScript(script, callback)를 호출할 때, 함께 호출할 callback 함수가 준비되어 있어야 한다.
+    loadScript를 호출하기 이전에 호출 결과로 무엇을 할지 미리 알고 있어야한다.
+    2. 콜백은 하나만 가능하다.
+ * 프라미스를 사용하면 흐름이 자연스럽고 유연한 코드를 작성할 수 있다. 이 외에도 많은 장점이 있다.
+ */
+
+////////////////////////////////////////////////
