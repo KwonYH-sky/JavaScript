@@ -68,3 +68,47 @@ promise.then(function (result) {
  * 이런 식으로 한 프라미스에 여러 개의 핸들러를 등록해서 사용하는 경우는 거의 없다. 
  * 프라미스는 주로 체이닝을 해서 쓰인다.
  */
+
+///////////////////////////////////
+
+/** 프라미스 반환하기
+ * .then(handler)에 사용된 핸들러가 프라미스를 생성하거나 반환하는 경우도 있다.
+ * 이 경우 이어지는 핸들러는 프라미스가 처리될 때까지 기다리다가 처리가 완료되면 그 결과를 받는다.
+ */
+// 예시:
+new Promise((resolve, reject) => {
+    
+    setTimeout(() => resolve(1), 1000);
+
+}).then(function (result) {
+    
+    alert(result); // 1
+
+    return new Promise((resolve, reject) => { // (*)
+        setTimeout(() => resolve(result * 2), 1000);
+    });
+}).then(function (result) {
+    
+    alert(result); // 2
+
+    return new Promise((resolve, reject) => {
+        setTimeout(() => resolve(result * 2), 1000);
+    });
+}).then(function (result) {
+    
+    alert(result); // 4
+
+});
+/* 예시에서 첫 번째 .then은 1을 출력하고 new Promise(...)를 반환((*))한다.
+ * 1초 후 이 프라미스가 이행되고 그 결과(resolve의 인수인 result * 2)는 두 번째 .then으로 전달된다.
+ * 두 번째 핸들러((**))는 2를 출력하고 동일한 과정이 반복된다.
+ * 따라서 얼럿 창엔 이전 예시와 동일하게 1, 2, 4가 차례대로 출력된다. 다만 얼럿 창 사이에 1초의 딜레이가 생긴다.
+ * 이렇게 핸들러 안에서 프라미스를 반환하는 것도 비동기 작업 체이닝을 가능하게 해준다.
+ */
+
+//////////////////
+
+/**
+ * 
+ */
+
