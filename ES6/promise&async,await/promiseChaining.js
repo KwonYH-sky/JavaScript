@@ -108,7 +108,71 @@ new Promise((resolve, reject) => {
 
 //////////////////
 
-/**
- * 
+/** loadScript 예시 개선하기
+ * 이전에 프라미스를 사용해 정의한 loadScript(스크립트를 순차적으로 불러줌)를 개선해보자.
  */
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        let script = document.createElement('script');
+        script.src = src;
 
+        script.onload = () => resolve(script);
+        script.onerror = () => reject(new Error(`${src}를 불러오는 도중에 에러가 발생함`));
+
+        document.head.append(script);
+    });
+}
+
+loadScript("/article/promise-chaining/one.js")
+    .then(function (script) {
+        return loadScript("/article/promise-chaining/two.js");
+    })
+    .then(function (script) {
+        return loadScript("/article/promise-chaining/three.js");
+    })
+    .then(function (script) {
+        // 불러온 스크립트 안에 정의된 함수를 호출해
+        // 실제로 스크립트들이 정상적으로 로드되었는지 확인한다.
+        one();
+        two();
+        three();
+    });
+
+/* 화살표 함수를 사용하면 다음과 같이 코드를 줄일수도 있다. */
+
+loadScript("/article/promise-chaining/one.js")
+    .then(script => loadScript("/article/promise-chaining/two.js"))
+    .then(script => loadScript("/article/promise-chaining/three.js"))
+    .then(script => {
+        // 스크립트를 정상적으로 불러왔기 때문에 스크립트 내의 함수를 호출할 수 있다.
+        one();
+        two();
+        three();
+    });
+
+/* loadScript를 호출할 때마다 프라미스가 반환되고 다음 .then은 프라미스가 이행되었을 때 실행된다.
+ * 이후에 다음 스크립트를 도딩하기 위한 초기화가 진행된다. 스크립트는 이런 과정을 거쳐 순차적으로 로드된다.
+ * 
+ * 체인에 더 많은 동작을 추가할 수도 있는데, 
+ * 추가 작업이 많아져도 코드가 오른쪽으로 길어지지 않고 아래로만 증가해서 멸망의 피라미드가 만들어지지  않는다.
+ * 한편, 아래와 같이 각 loadScript에 .then을 바로 붙일 수도 있다.
+ */
+loadScript("/article/promise-chaining/one.js").then(script1 => {
+    loadScript("/article/promise-chaining/two.js").then(script2 => {
+        loadScript("/article/promise-chaining/three.js").then(script3 => {
+            // 여기서 script1, script2, script3에 정의된 함수를 사용할 수 있다.
+            one();
+            two();
+            three();
+        });
+    });
+});
+
+/* 이렇게 .then을 바로 붙여도 동일한 동작(스크립트 세개를 순차적으로 불러오는 작업)을 수행한다.
+ * 하지만 코드가 '오른쪽으로' 길어진 단점이 있다. 콜백에서 언급한 문제와 동일한 문제가 발생했다.
+ * 프라미스에 미숙해 체이닝을 모르는 경우 위와 같은 코드가 발생하기 쉽다. 그러나 대개 체이닝이 선호된다.
+ * 
+ * 중첩 함수에서 외부 스코프에 접슨할 수 있기 때문에 .then을 바로 쓰는 게 괜찮은 경우도 있다.
+ * 위 예제에서 가장 깊은 곳에 있는 중첩 콜백은 script1, script2, script3 안에 있는 변수 모두 접근할 수 있다.
+ * 이런 예외 상황이 있다는 정도 알아두면 좋다.
+ */
