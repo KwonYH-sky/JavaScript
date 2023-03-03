@@ -176,3 +176,39 @@ loadScript("/article/promise-chaining/one.js").then(script1 => {
  * 위 예제에서 가장 깊은 곳에 있는 중첩 콜백은 script1, script2, script3 안에 있는 변수 모두 접근할 수 있다.
  * 이런 예외 상황이 있다는 정도 알아두면 좋다.
  */
+
+/** ! thenable
+ * 핸들러는 프라미스가 아닌 thenable이라 불리는 객체를 반환하기도 한다.
+ * .then이라는 메서드를 가진 객체는 모두 thenable 객체라고 부르는데,
+ * 이 객체는 프라미스와 같은 방식으로 처리된다.
+ * 
+ * 'thenable' 객체에 대한 아이디어는 서드파티 라이브러리 '프라미스와 호환 가능한' 자체 객체를 구현할 수 있다는 점에서 나왔다.
+ * 이 객체들엔 자체 확장 메서드가 구현되어 있겠지만 .then이 있기 때문에 네이티브 프라미스와도 호환이 가능하다.
+ * 
+ * 아래는 thenable 객체 예시이다.
+ */
+class Thenable {
+    constructor(num) {
+        this.num = num;
+    }
+    then(resolve, reject) {
+        alert(resolve); // function() { 네이티브 코드 }
+        // 1초 후 this.num*2와 함께 이행됨
+        setTimeout(() => resolve(this.num * 2), 1000); // (**)
+    }
+}
+
+new Promise(resolve => resolve(1))
+    .then(result => {
+        return new Thenable(result); // (*)
+    })
+    .then(alert); // 1000밀리 초 후 2를 보여줌
+/* 자바스크립트는 (*)로 표시한 줄에서 .then 핸들러가 반환한 객체를 확인한다.
+ * 이 객체에 호출 가능한 메서드 then이 있으면 then이 호출된다.
+ * then은 resolve와 reject라는 네이티브 함수를 인수로 받고(executor과 유사함), 둘 중 하나가 호출될 때까지 기다린다.
+ * 위 예시에서 resolve(2)는 1초 후에 호출된다.( (**) ). 호출 후 결과는 체인을 따라 아래로 전달된다.
+ * 
+ * 이런 식으로 구현하면 Promise를 상속받지 않고도 커스템 객체를 사용해 프라미스 체이닝을 만들 수 있다.
+ */
+
+////////////////////////////////////////////////////////////////////////////
