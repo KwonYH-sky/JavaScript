@@ -212,3 +212,122 @@ new Promise(resolve => resolve(1))
  */
 
 ////////////////////////////////////////////////////////////////////////////
+
+/** fetch와 체이닝 함께 응용하기
+ * 프론트 단에선, 네트워크 용청 시 프라미스를 자주 사용한다.
+ * 예시에선 메서드 fetch를 사용해 원래 서버에서 사용자 정보를 가져온다.
+ * fetch엔 다양한 선택 매개변수가 있지만, 여기선 기본 문법만 사용해 보자.
+    let promise = fetch(url);
+ * 위 코드를 실행하면 url에 네트워크를 요청을 보내고 프라미스를 반환한다. 
+ * 원격 서버가 헤더와 함께 응담을 보내면, 프라미스는 response 객체와 함께 이행된다.
+ * 그런데 이때 response 전체가 완전히 다운로드되기 전에 프라미스는 이행 상태가 되어버린다.
+ * 
+ * 응답이 완전히 종료되고, 응답 전체를 읽으려면 메서드 response.text()를 호출해야한다.
+ * response.text()는 원격 서버에서 전송한 텍스트 전체가 다운로드되면, 
+ * 이 텍스트를 result값으로 갖는 이행된 프라미스를 반환한다.
+ * 아래 코드를 실행하면 user.json에 요청이 가고 서버에서 해당 텍스트를 불러온다.
+ */
+fetch('/article/promise-chaining/user.json')
+    // 원격 서버가 응답하면 .then 아래 코드가 실행된다.
+    .then(function (response) {
+        // response.text()는 응답 텍스트 전체가 다운로드되면
+        // 응답 텍스트를 새로운 이향 프라미스를 만들고, 이를 반환한다.
+        return response.text();
+    })
+    .then(function (response) {
+        // 원격에서 받아온 파일의 내용
+        alert(text);
+    });
+/* 그런데 메서드 response.json()를 쓰면 원격에서 받아온 데이터를 읽고 JSON으로 파싱할 수 있다.
+ * 예시엔 이 메서드가 더 적합하므오 기존에 작성한 코드를 약간 변경해보자.
+ * 화살표 함수도 함께 써서 코드를 간결하게 하자.
+ */
+// 위 코드와 동일한 기능을 하지만, response.json()은 원격 서버에서 불러온 내용을 JSON으로 변경해준다.
+fetch('/article/promise-chaining/user.json')
+    .then(response => response.json())
+    .then(user => alert(user.name)); // 이름만 가져옴.
+
+/* 다음은 불러온 사용자 정보를 가지고 GitHub에 요청을 보내 사용자 프로필을 불러오고 아바타를 출력하는 예시다. */
+// user.json에 요청을 보낸다.
+fetch('/article/promise-chaining/user.json')
+    // 응답받은 내용을 json으로 불러온다.
+    .then(response => response.json())
+    // GitHub에 요청을 보낸다.
+    .then(user => fetch(`https://api.github.com/users/${user.name}`))
+    // 응답받은 내용을 json 형태로 불러온다.
+    .then(response => response.json())
+    // 3초간 아바타 이미지(githubUser.avatar_url)를 보여준다.
+    .then(githubUser => {
+        let img = document.createElement('img');
+        img.src = githubUser.avatar_url;
+        img.className = "promise-avatar-example";
+        document.body.append(img);
+
+        setTimeout(() => img.remove(), 3000); // (*)
+    });
+/* 코드는 주석에 적은 대로 잘 동작한다. 그런데 위 코드엔 프라미스를 다루는데 서툰 개발자가 자주 저지르는 잠재적 문제가 내재돼 있다.
+ * (*)로 표시한 줄을 보자. 만약 아바타가 잠깐 보였다가 사라진 이후에 무언가를 하고 싶으면 어떻게 해야 할까?
+ * 사용자 정보를 수정할 수 있게 해주는 폼을 보여주는 것 같은 작업을 추가하는 경우같이 말이다. 지금으로선 방법이 없다.
+ * 
+ * 체인을 확장할 수 있도록 만들려면 아바타가 사라질 때 이행 프라미스를 반환해 줘야 한다.
+ * 아래와 같이..
+ */
+fetch('/article/promise-chaining/user.json')
+    .then(response => response.json())
+    .then(user => fetch(`https://api.github.com/users/${user.name}`))
+    .then(response => response.json())
+    .then(githubUser => new Promise(function(resolve, reject) { // (*)
+        let img = document.createElement('img');
+        img.src = githubUser.avatar_url;
+        img.className = "promise-avatar-example";
+        document.body.append(img);
+
+        setTimeout(() => {
+            img.remove();
+            resolve(githubUser); // (**)
+        }, 3000);
+    }))
+    // 3초 후 동작함
+    .then(githubUser => alert(`${githubUser.name}의 이미지를 성공적으로 출력하였다.`));
+/* (*)로 표시한 곳의 .then 핸들러는 이제 setTimeout안의 resolve(githubUser)를 호출했을 때( (**) )만 처리상태가 되는 new Promise를 반환한다.
+ * 체인은 다음 .then은 이를 기다린다.
+ * 
+ * 비동기 동작은 항상 프라미스를 반환하도록 하는 것이 좋다. 
+ * 지금은 체인을 확장할 계획이 없더라도 이렇게 구현해 놓으면 
+ * 나중에 체인 확장이 필요한 경우 손쉽게 체인을 확장할 수 있다.
+ * 
+ * 코드를 재사용 가능한 함수 단위로 분리해 보자.
+ */
+
+function loadJson(url) {
+    return fetch(url)
+        .then(response => response.json());
+}
+
+function loadGitHubUser(name) {
+    return fetch(`https://api.github.com/users/${user.name}`)
+        .then(response => response.json());
+}
+
+function showAvatar(githubUser) {
+    return new Promise(function (resolve, reject) {
+        let img = document.createElement('img');
+        img.src = githubUser.avatar_url;
+        img.className = "promise-avatar-example";
+        document.body.append(img);
+
+        setTimeout(() => {
+            img.remove();
+            resolve(githubUser); 
+        }, 3000);
+    });
+}
+
+// 함수를 이용해 다시 동일 작업을 수행
+loadJson('article/promise-chaining/user.json')
+    .then(user => loadGitHubUser(user.name))
+    .then(showAvatar)
+    .then(githubUser => alert(`Finished showing ${githubUser.name}`));
+    // ...
+
+/////////////////////////////////////////////////////////////////////////////////
