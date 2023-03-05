@@ -218,7 +218,7 @@ promise.catch(alert); // 1초 뒤 "Error: 에러 발생!" 출력
 // 아래 프라미스는 생성과 동시에 이행된다.
 promise = new Promise(resolve => resolve("완료"));
 
-promise.then(alert); // 완료 (바료 출력됨)
+promise.then(alert); // 완료 (바로 출력됨)
 
 /* 가수와 팬, 구독리스트 시나리오보다 프라미스가 더 복잡하다고 말한 이유가 바로 이런 기능 때문이다.
  * 가수가 신곡을 발표한 이후 구독 리스트에 이름을 올리는 팬은 신곡 발표 여부를 알 수 없다.
