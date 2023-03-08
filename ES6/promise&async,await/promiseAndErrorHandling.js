@@ -186,3 +186,15 @@ new Promise(function () {
     브라우저 환경에서 예방에 unhandledrejection을, 다른 환경에선 유사한 핸들러를 사용할 수 있다.
  */
 
+/** setTimeout에서의 에러
+ */
+new Promise((resolve, reject) => {
+    setTimeout(() => {
+        throw new Error("에러 발생!");
+    }, 1000);
+}).catch(alert);
+/* .catch은 트리거가 되지 않는다.
+ * '암시적 try..catch'가 함수 코드를 감싸고 있으므로 모든 동기적 에러는 '암시적 try..catch'에서 처리된다.
+ * 하지만 여기에서 에러는 executor(실행자, 실행 함수)가 실행되는 동안이 아니라 나중에 발생한다.
+ * 따라서 프라미스는 에러를 처리 할 수 없다.
+ */
