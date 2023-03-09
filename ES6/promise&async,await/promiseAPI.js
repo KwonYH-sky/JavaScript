@@ -78,5 +78,94 @@ Promise.all([
  */
 
 /** ! 에러가 발생하면 다른 프라미스는 무시된다.
+ * 프라미스가 하나라도 거부되면 Promise.all은 즉시 거부되고 배열에 저장된 다른 프라미스의 결과는 완전히 무시된다.
+ * 이행된 프라미스의 결과도 무시된다.
+ * fetch를 사용해 호출 여러 개를 만들면, 그중 하나가 실패하더라도 호출은 계속 일어난다. 그렇더라도 Promise.all은 다른 호출을 더는 신경 쓰지 않는다.
+ * 프라미스가 처리되긴 하곘지만 그 결과는 무시된다.
+ * 프라미스에는 '취소'라는 개념이 없어서 Promise.all도 프라미스를 취소하지 않는다. 
+ * AbortController를 사용하면 프라미스 취소가 가능하지만, AbortController는 프라미스 API가 아니다.
+ */
+
+/** i 이터러블 객체가 아닌 '일반'값도 Promise.all(iterable)에 넘길 수 있다.
+ * Promise.all(...)은 대개 프라미스가 요소인 이터러블 객체(대부분 배열)를 받는다. 
+ * 그런데 요소가 프라미스가 아닌 객체일 경우엔 요소 '그대로' 결과 배열에 전달된다.
  * 
+ * 아래 예시의 결과는 [1, 2, 3]이다.
+ */
+Promise.all([
+    new Promise((resolve, reject) => {
+        setTimeout(() => resolve(1), 1000)
+    }),
+    2,
+    3
+]).then(alert); // 1, 2, 3
+/* 이미 결과를 알고 있는 값은 이 특징을 이용해 Promise.all에 그냥 전달하면 된다. */
+
+/////////////////////
+
+/** Promise.allSettled (! 최근에 추가됨)
+ * Promise.all은 프라미스가 하나라도 거절되면 전체를 거절한다.
+ * 따라서, 프라미스 결과가 모두 필요할 때같이 '모 아니면 도'일 때 유용하다.
+ */
+Promise.all([
+    fetch('/template.html'),
+    fetch('/style.css'),
+    fetch('/date.json')
+]).then(render); // render 메서드는 fetch 결과 전부가 있어야 제대로 동작한다.
+
+/* 반면, Promise.allSettled는 모든 프라미스가 처리될 때까지 기다린다. 반환되는 배열은 다음과 같은 요소를 갖는다.
+    * 응답이 성공할 경우 - {status:"fulfilled", value:result}
+    * 에러가 발생한 경우 - {status:"rejected", reason:error}
+ * 
+ * fetch를 사용해 여러 사람의 정보를 가져오고 있다고 해보자. 여러 요청 중 하나가 실패해도 다른 요청 결과는 여전히 필요하다.
+ * 이럴 때 Promise.allSettled를 사용할 수 있다.
+ */
+urls = [
+    'https://api.github.com/users/iliakan',
+    'https://api.github.com/users/Violet-Bora-Lee',
+    'https://no-such-url'
+];
+
+Promise.allSettled(urls.map(url => fetch(url)))
+    .then(results => { // (*)
+        results.forEach((result, num) => {
+            if (result.status == "fulfilled") {
+                alert(`${urls[num]}: ${result.value.status}`);
+            }
+            if (result.status == "rejected") {
+                alert(`${urls[num]}: ${result.reason}`);
+            }
+        });
+    });
+/* (*)로 표시한 줄의 results는 다음과 같을 것이다.
+    [
+        {status: 'fulfilled', value: ...응답...},
+        {status: 'fulfilled', value: ...응답...},
+        {status: 'rejected', reason: ...에러 객체...}
+    ]
+ * Promise.allSettled를 사용하면 이처럼 각 프라미스 상태와 값 또는 에러를 받을 수 있다.
+ */
+
+/** 폴리필
+ * 브라우저가 Promise.allSettled를 지원하지 않는다면 폴리필을 구현하면 된다.
+ */
+if (!Promise.allSettled) {
+    Promise.allSettled = function (promises) {
+        return new Promise.all(promises.map(p => Promise.resolve(p).then(value => ({
+            status: 'fulfilled',
+            value
+        }), reason => ({
+            status: 'rejected',
+            reason
+        }))));
+    };
+}
+/* 여기서 promise.map은 입력값을 받아 p => Promise.resolve(p)로 입력값을 프라미스로 변화시킨다(프라미스가 아닌 값을 값은 경우).
+ * 그리고 모든 프라미스에 .then 핸들러가 추가된다.
+ * 
+ * then 핸들러는 성공한 프라미스의 결괏값 value를 {status: 'fulfilled', value}로, 
+ * 실패한 프라미스의 결괏값 reason을 {status:'rejected', reason}으로 변경한다. 
+ * Promise.allSettled의 구성과 동일하다.
+ * 
+ * 이렇게 폴리필을 구현하면 프라미스 일부가 거부되더라도 Promise.allSettled를 사용해 프라미스 전체의 결과를 얻을 수 있다.
  */
