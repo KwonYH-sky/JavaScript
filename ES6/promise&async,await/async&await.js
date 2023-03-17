@@ -265,10 +265,70 @@ let results = await Promise.all([
     * 1. 에러 발생 - 예외가 생성된(에러가 발생한 장소에서 throw error를 호출한 것과 동일함)
     * 2. 에러 미발생 - 프라미스 객체의 result 값을 반환
     
- * async/await를 함께 사용하면 읽고, 쓰기 쉬운 비동기 코드를 작성할 수 있다.
+ * async/await를 함께 사용하면 읽고, 쓰기 쉬운 비동기 코드를 작성할 수 있다.n
 
  * async/await를 사용하면 promise.then/catch가 거의 필요없다.
  * 하지만 가끔 가장 바깥 스코프에서 비동기 처리가 필요할 때와 같이 promise.then/catch를 서야하는 경우가 생기기 때문에
  * async/await가 프라미스를 기반으로 한다는 사실을 알고 있어야 한다.
  * 여러 작업이 있고, 이 작업들이 모두 완료될 때까지 기다리려면 Promise.all을 활용할 수 있다는 점도 알고 있으면 유용하다.
+ */
+
+//////////////////////////////////////////////////////////////
+
+/** async와 await를 사용하여 코드 변경하기
+ * .then/catch 대신 async/await를 사용해 다시 작성해보자.
+function loadJson(url) {
+  return fetch(url)
+    .then(response => {
+      if (response.status == 200) {
+        return response.json();
+      } else {
+        throw new Error(response.status);
+      }
+    })
+}
+
+loadJson('no-such-user.json')
+  .catch(alert); // Error: 404
+ */
+async function loadJson(url) {
+    let response = await fetch(url);
+    try {
+        if (response.status == 200) {
+            return await response.json();
+        } else {
+            throw new Error(response.status);
+        }
+    } catch (error) {
+        alert(error);
+    }
+}
+
+loadJson('no-such-user.json');
+
+/** 해답
+async function loadJson(url) { // (1)
+  let response = await fetch(url); // (2)
+
+  if (response.status == 200) {
+    let json = await response.json(); // (3)
+    return json;
+  }
+
+  throw new Error(response.status);
+}
+
+loadJson('no-such-user.json')
+  .catch(alert); // Error: 404 (4)
+ * 설명:
+  1. 함수 loadJson은 async 함수가 된다.
+  2. 함수 안의 .then을 전부 await로 바꾼다.
+  3. 위 답안처럼 await를 사용해도 되지만, 아래처럼 return response.json()를 사용해도 된다.
+    if (response.status == 200) {
+        return response.json();
+    }
+  대신, 이렇게 작성하면 프라미스가 이행되는걸 await를 사용해 바깥 코드에서 기다라려야 한다.
+  위 예시는 해당 사항이 없지만 말이다.
+  4. loadJson에서 던저진 에러는 .catch에서 처리된다.
+  loadJson을 호출하는 코드는 async 함수 내부가 아니기 때문에 await loadJson{...}을 사용할 수 없다.
  */
