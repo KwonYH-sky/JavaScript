@@ -83,3 +83,124 @@ alert(JSON.stringify(three)); // {value: 3, done: true}
 
 ///////////////////////////////////////
 
+/** 제너레이터와 이터러블
+ * next() 메서드를 보면서 짐작했드시, 제너레이터는 이터러블이다.
+ * 따라서 `for..of` 반복문을 사용해 값을 얻을 수 있다.
+ */
+
+function* generateSequence() {
+    yield 1;
+    yield 2;
+    return 3;
+}
+
+generator = generateSequence();
+
+for (let value of generator) {
+    alert(value); // 1, 2가 출력됨
+}
+
+/* .next().value을 호출하는 것보다 나아 보인다.
+ * 그런데 주의할 점이 있다. 위 예시를 실행하면 1과 2만 출력되고 3은 출력되지 않는다.
+ * 
+ * 이유는 `for..of` 이터레이션이 `done:true`일 때 마지막 value를 무시하기 때문이다.
+ * 그러므로 `for..of`를 사용했을 때 모든 값이 출력되길 원한다면 yield로 값을 반환해야 한다.
+ */
+
+function* generateSequence() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+generator = generateSequence();
+
+for (let value of generator) {
+    alert(value); // 1, 2, 3
+}
+
+/* 제너레이터는 이터러블 객체이므로 제너레이터에도 전개 문법(...)같은 관련 기능을 사용할 수 있다.  */
+
+function* generateSequence() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+let sequence = [0, ...generateSequence()];
+
+alert(sequence); // 0, 1, 2, 3
+
+/* 위 예시에서 ...generatorSequence()는 반복 가능한 제너레이터 객체를 배열 요소로 바꿔준다.
+ */
+
+//////////////////////////////////
+
+/** 이터러블 대신 제너레이터 사용하기
+ * iterable 객체에서 from..to 사이에 있는 값을 반환하는 반복 가틍 객체, range를 만들어 보았다.
+ * 코드를 상기해보자.
+ */
+let range = {
+    from: 1,
+    to: 5,
+
+    // for..of 최초 호출 시, Symbol.iterator가 호출된다.
+    [Symbol.iterator]() {
+        // Symbol.iterator는 이터레이터 객체를 반환한다.
+        // for..of는 반환된 이터레이터 객체만을 대상으로 동작하는데, 이때 다음 값도 정해진다.
+        return {
+            current: this.from,
+            last: this.to,
+
+            // for..of 반복문에 의해 각 이레이션마다 next()가 호출된다.
+            next(){
+                // next()는 객체 형태의 값, {done:..., value:...}을 반환해야한다.
+                if (this.current <= this.last) {
+                    return { done: false, value: this.current++};
+                } else {
+                    return { done: true };
+                }
+            }
+        };
+    }
+};
+
+// 객체 range를 대상으로 하는 이터레이션은 range.from과 range.to 사이의 숫자를 출력한다.
+alert([...range]); // 1, 2, 3, 4, 5
+
+/* Symbol.iterator 대신 제너레이터 함수를 사용하면, 제너레이터 함수로 반복이 가능하다.
+ * 같은 range이지만, 좀 더 암축된 range를 살펴보자.
+ */
+range = {
+    from: 1,
+    to: 5,
+
+    *[Symbol.iterator]() { // [Symbol.iterator]: function()를 잛게 줄임
+        for (let value = this.from; value < this.to; value++) {
+            yield value;
+        }
+    }
+};
+
+alert([...range]); // 1, 2, 3, 4, 5
+
+/* range[Symbol.iterator]()는 제너레이터를 반환하고, 
+ * 제너레이터 메서드는 for..of가 동작하는데 필요한 사항(아래 설명)을 충족시키므로 예시가 잘 동작한다.
+    * .next() 메서드가 있음
+    * 반환 값의 형태는 `{value:..., done: true/false}` 이어야함
+ * 이렇게 이터러블 객체 대신 제너레이터를 사용할 수 있는 것은 우연이 아니다.
+ * 제너레이터는 이터레이터를 어떻게 하면 쉽게 구현할지를 염두에 두며 자바스크립트에 추가되었다.
+ * 
+ * 제네러에터를 사용해 구현한 예시는 이터러블을 사용해 구현한 기존 예시보다 훨씬 간결하고 동일한 기능을 제공한다.
+ */
+
+/** i) 제너레이터는 무한한 값을 만들 수도 있다.
+ * 위 예시에선 유한한 연속 값을 생성했지만, 값을 끊임없이 생성하는 제너레이터를 만드는 것도 가능하다.
+ * 끊임없는 의사 난수를 생성하는 것처럼 말이다.
+ * 
+ * 끊임없는 값을 생성하는 제너레이터를 만들었다면 당연히 for..of 안에 break이나 return이 있어야 한다.
+ * 그렇지 않으면 무한 반복문이 되어서 스크립트가 멈추어 버린다.
+ */
+
+///////////////////////////////////////////////////
+
