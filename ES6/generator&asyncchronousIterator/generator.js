@@ -204,3 +204,80 @@ alert([...range]); // 1, 2, 3, 4, 5
 
 ///////////////////////////////////////////////////
 
+/** 제너레이터 컴포지션
+ * 제너레이터 컴포지션(generator composition)은 제너리이터 안에 제너레이터를 
+ * '임베딩(embedding, composing)'할 수 있게 해주는 제너레이터의 특별 기능이다.
+ * 
+ * 먼저, 연속된 숫자를 생성하는 제너레이터 함수를 만들어 보자.
+ */
+function* generateSequence(start, end) {
+    for (let i = start; i <= end; i++) yield i;
+}
+/* 그리고 이 함수를 기반으로 좀더 복잡한 값을 연속해서 생성하는 함수를 만들자. 값 생성 규칙은 다음과 같다.
+    * 처음엔 숫자 0부터 9까지를 생성한다(문자 코드 48부터 57까지).
+    * 이어서 알파벳 대문자 A부터 Z까지를 생성한다(문자 코드 65부터 90까지).
+    * 이어서 알파벳 소문자 a부터 z까지를 생성한다(문자 코드 97부터 122까지).
+ * 
+ * 이런 규칙을 충족하는 연속 값은 비밀번호를 만들 때 응용할 수 있다(물론 특수 문자도 추가 할 수 있다).
+ * 일반 함수로는 여러 개의 함수를 만들고, 그 결과를 어딘가에 저장한 후 다시 그 결과들을 조합해야 원하는 기능을 구현할 수 있다.
+ * 하지만 제너레이터의 특수 문법 yield*를 사용하면 제너레이터를 다른 제너레이터에 '끼워 넣을 수' 있다.
+ * 컴포지션을 적용한 제너레이터는 다음과 같다.
+ */
+function* generateSequence(start, end) {
+    for (let i = start; i <= end; i++) yield i;
+}
+
+function* generatePasswordCodes() {
+    
+    // 0..9
+    yield* generateSequence(48, 57);
+
+    // A..Z
+    yield* generateSequence(65, 90);
+
+    // a..z
+    yield* generateSequence(97, 122);
+
+}
+
+let str ='';
+
+for (let code of generatePasswordCodes()) {
+    str += String.fromCharCode(code);
+}
+
+alert(str); // 0..9A..Za..z
+
+/* `yield*` 지시자는 실행을 다른 제너레이터에 위임한다(delegate).
+ * 여기서 '위임'은 `yield* gen`이 제너레이터 gen을 대상으로 반복을 수행하고, 
+ * 산출 값들을 바깥으로 전달한다는 것을 의미한다.
+ * 마치 외부 제네레이터에 의해 값이 산출된 것 처럼 보인다.
+ * 
+ * 중첩 제네러에터(generateSequence)의 코드를 직접 써줘도 결과는 같다.
+ */
+function* generatePasswordCodes() {
+    
+    // 0..9
+    for (let i = 48; i <= 57; i++) yield i;
+
+    // A..Z
+    for (let i = 65; i <= 90; i++) yield i;
+
+    // a..z
+    for (let i = 97; i <= 122; i++) yield i;
+
+}
+
+str ='';
+
+for (let code of generatePasswordCodes()) {
+    str += String.fromCharCode(code);
+}
+
+alert(str); // 0..9A..Za..z
+/* 제너라이터 컴포지션을 사용하면 한 제네레이터의 흐름을 자연스럽게 다른 제너레이터에 삽입할 수 있다.
+ * 제너레이터 컴포지션을 사용하면 중간결과 저장 용도의 추가 메모리가 필요하지 않다.
+ */
+
+///////////////////////////////////////////////////////////////////
+
