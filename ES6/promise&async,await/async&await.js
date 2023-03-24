@@ -332,3 +332,182 @@ loadJson('no-such-user.json')
   4. loadJson에서 던저진 에러는 .catch에서 처리된다.
   loadJson을 호출하는 코드는 async 함수 내부가 아니기 때문에 await loadJson{...}을 사용할 수 없다.
  */
+
+/** async와 await를 사용해서 '다시 던지기' 예시 재작성하기
+ * 이 예시를 .then/catch 대신 async/await를 사용해 다시 작성해 봅시다.
+ * 그리고 demoGithubUser 안의 반복(recursion)은 반복문(loop)을 사용해 작성하도록 합시다. 
+ * async/await를 사용하면 쉽게 작성할 수 있습니다.
+
+class HttpError extends Error {
+  constructor(response) {
+    super(`${response.status} for ${response.url}`);
+    this.name = 'HttpError';
+    this.response = response;
+  }
+}
+
+function loadJson(url) {
+  return fetch(url)
+    .then(response => {
+      if (response.status == 200) {
+        return response.json();
+      } else {
+        throw new HttpError(response);
+      }
+    })
+}
+
+// 유효한 사용자를 찾을 때까지 반복해서 username을 물어봄
+function demoGithubUser() {
+  let name = prompt("GitHub username을 입력하세요.", "iliakan");
+
+  return loadJson(`https://api.github.com/users/${name}`)
+    .then(user => {
+      alert(`이름: ${user.name}.`);
+      return user;
+    })
+    .catch(err => {
+      if (err instanceof HttpError && err.response.status == 404) {
+        alert("일치하는 사용자가 없습니다. 다시 입력해 주세요.");
+        return demoGithubUser();
+      } else {
+        throw err;
+      }
+    });
+}
+
+demoGithubUser();
+ */
+
+class HttpError extends Error {
+  constructor(response) {
+    super(`${response.status} for ${response.url}`);
+    this.name = "HttpError";
+    this.response = response;
+  }
+}
+
+async function loadJson(url) {
+  let response = await fetch(url);
+
+  if (response.status == 200) {
+    return await response.json();
+  } else {
+    throw new HttpError(response);
+  }
+}
+
+// 유효한 사용자를 찾을 때까지 반복해서 username을 물어봄
+async function demoGithubUser() {
+  let name = prompt("GitHub username을 입력하세요.", "iliakan");
+
+  try {
+    let user = await loadJson(`https://api.github.com/users/${name}`);
+    alert(`이름: ${user.name}.`);
+    return user;
+  } catch (err) {
+    if (err instanceof HttpError && err.response.status == 404) {
+      alert("일치하는 사용자가 없습니다. 다시 입력해 주세요.");
+      return demoGithubUser();
+    } else {
+      throw err;
+    }
+  }
+}
+
+demoGithubUser();
+
+/** 해답
+class HttpError extends Error {
+  constructor(response) {
+    super(`${response.status} for ${response.url}`);
+    this.name = 'HttpError';
+    this.response = response;
+  }
+}
+
+async function loadJson(url) {
+  let response = await fetch(url);
+  if (response.status == 200) {
+    return response.json();
+  } else {
+    throw new HttpError(response);
+  }
+}
+
+// 유효한 사용자를 찾을 때까지 반복해서 username을 물어봄
+async function demoGithubUser() {
+
+  let user;
+  while(true) {
+    let name = prompt("GitHub username을 입력하세요.", "iliakan");
+
+    try {
+      user = await loadJson(`https://api.github.com/users/${name}`);
+      break; // 에러가 없으므로 반복문을 빠져나옵니다.
+    } catch(err) {
+      if (err instanceof HttpError && err.response.status == 404) {
+        // 얼럿 창이 뜬 이후에 반복문은 계속 돕니다.
+        alert("일치하는 사용자가 없습니다. 다시 입력해 주세요.");
+      } else {
+        // 알 수 없는 에러는 다시 던져집니다.
+        throw err;
+      }
+    }
+  }
+
+
+  alert(`이름: ${user.name}.`);
+  return user;
+}
+
+demoGithubUser();
+ */
+
+
+
+/** async가 아닌 함수에서 async 함수 호출하기
+ * ‘일반’ 함수가 하나 있는데, 여기서 async 함수를 어떻게 하면 호출하고, 그 결과를 사용할 수 있을까요?
+async function wait() {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  return 10;
+}
+
+function f() {
+  // ...코드...
+  // async wait()를 호출하고 그 결과인 10을 얻을 때까지 기다리려면 어떻게 해야 할까요?
+  // f는 일반 함수이기 때문에 여기선 'await'를 사용할 수 없다는 점에 주의하세요!
+}
+
+ * 참고: 문제 자체는 아주 간단하지만, async와 await를 학습한 지 얼마 안 된 개발자들이 쉽게 접하는 상황입니다.
+ */
+
+async function wait() {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  return 10;
+}
+
+function f() {
+  wait().then(result => alert(result));
+}
+
+f();
+
+/** 해답
+ * async/await가 내부에서 어떻게 동작하는지 알아야 문제를 풀 수 있습니다.
+ * async 함수를 호출하면 프라미스가 반환되므로, .then을 붙이면 됩니다.
+async function wait() {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  return 10;
+}
+
+function f() {
+  // shows 10 after 1 second
+  wait().then(result => alert(result));
+}
+
+f();
+ */
