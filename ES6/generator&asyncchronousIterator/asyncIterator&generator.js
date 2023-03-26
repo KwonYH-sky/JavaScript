@@ -26,10 +26,10 @@ let range = {
             last: this.to,
 
             // for..of 반복문에 의해 각 이레이션마다 next()가 호출된다.
-            next(){ 
+            next() {
                 // next()는 객체 형태의 값, {done:..., value:...}을 반환해야한다.
                 if (this.current <= this.last) {
-                    return { done: false, value: this.current++};
+                    return { done: false, value: this.current++ };
                 } else {
                     return { done: true };
                 }
@@ -63,7 +63,7 @@ range = {
             last: this.to,
 
             // for await..of 반복문에 의해 각 이터레이션마다 next()가 호출된다.
-            async next(){ // (2)
+            async next() { // (2)
                 // next()는 객체 형태의 값, {done:..., value:...}을 반환한다.
                 // (객체는 async에 의해 자동으로 프라미스로 감싸진다.)
 
@@ -71,7 +71,7 @@ range = {
                 await new Promise(resolve => setTimeout(resolve, 1000)); // (3)
 
                 if (this.current <= this.last) {
-                    return { done: false, value: this.current++};
+                    return { done: false, value: this.current++ };
                 } else {
                     return { done: true };
                 }
@@ -113,4 +113,59 @@ range = {
  */
 
 ///////////////////////////////////////////////////////////////
+
+/** async 제너레이터
+ * 자바스크립트는 제너레이터를 사용할 수 있는데, 제너레이터는 이터러블 객체이다.
+ * 다음은 이전에 사용한 start부터 end까지 연속의 숫자를 생성해주는 제너레이터이다.
+ */
+function* generateSequence(start, end) {
+    for (let i = start; i <= end; i++) {
+        yield i;
+    }
+}
+
+for (let value of generateSequence(1, 5)) {
+    alert(value); // 1, then 2, then 3, then 4, then 5
+}
+
+/* 일반 제너레이터에선 await를 사용할 수 없다. 그리고 모든 값은 동기적으로 생산된다.
+ * for..of 어디에서도 딜레이를 줄 만한 곳이 없다. 일반 제너레이터는 동기적 문법이다.
+ * 
+ * 그런데 제너레이터 본문에서 await를 사용해야만 하는 상황이 발생하면 어떻게 해야할까?
+ * 아래와 같이 네트워크를 요청해야하는 상황같은 사례가 발생한다면 말이다.
+ * 
+ * 아래 예시 처럼 async를 제너레이터 함수 앞에 붙여주면 된다.
+ */
+async function* generateSequence(start, end) {
+    for (let i = start; i <= end; i++) {
+        // await를 사용할 수 있다.
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        yield i;
+    }
+
+}
+
+(async () => {
+
+    let generator = generateSequence(1, 5);
+    for await (let value of generator) {
+        alert(value); // 1, 2, 3, 4, 5
+    }
+
+})();
+
+/* 이제 for await...of로 반복 가능한 async 제너레이터를 사용할 수 있게 되었다.
+ * async 제너레이터를 만드는 것은 실제로도 상당히 간단하다. 
+ * async 키워드를 붙이기만 하면 제너레이터 안에서 프라미스와 기타 async 함수를 기반으로 동작하는 await를 사용할 수 있다.
+ * 
+ * async 제너레이터의 generator.next() 메서드는 비동기적이 되고, 프라미스를 반환한다는 점은 일반 제너레이터와 async 제너레이터엔 또 다른 차이이다.
+ * 일반 제너레이터에서는 result = generator.next()를 사용해 값을 얻는다.
+ * 반면 async 제너레이터에서는 아래와 같이 await를 붙여줘야한다.
+ 
+    result = await generator.next(); // result = {value:..., done: true/ false}
+
+ */
+
+//////////////////////////////////////////////////////
 
