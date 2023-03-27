@@ -169,3 +169,65 @@ async function* generateSequence(start, end) {
 
 //////////////////////////////////////////////////////
 
+/** async 이터러블
+ * 반복 가능한 객체를 만들려면 객체에 Symbol.iterator를 추가해야 한다.
+
+let range = = {
+    from: 1,
+    to: 5,
+    [Symbol.iterator]() {
+        return <range를 반복가능하게 만드는 next가 구현된 객체>
+    }
+}
+
+ * 그런데 Symbol.iterator는 위 예시와 같이 next가 구현된 일반 객체를 반환하는 것 보다, 
+ * 제너레이터를 반환하도록 구현하는 경우가 더 많다.
+ * 
+ * 제너레이터 예시를 다기 상기해보자.
+ */
+range = {
+    from: 1,
+    to: 5,
+
+    *[Symbol.iterator]() { // [Symbol.iterator]: function()를 잛게 줄임
+        for (let value = this.from; value < this.to; value++) {
+            yield value;
+        }
+    }
+};
+
+for (let value of range) {
+    alert(value); 1, 2, 3, 4, 5
+}
+/* 위 예시에서 커스텀 객체 range는 반복 가능하고, 
+ * 제너레이터 *[Symbol.iterator]엔 값을 나열해주는 로직이 구현되어 있다.
+ * 지금 상태에서 제너레이터에 비동기 동작을 추가하려면,
+ * Symbol.iterator를 async Symbol.asyncIterator로 바꿔야 한다.
+ */
+
+range = {
+    from: 1,
+    to: 5,
+
+    async *[Symbol.asyncIterator]() { // [Symbol.asyncIterator]: async function*()와 동일
+        for (let value = this.from; value < this.to; value++) {
+
+            // 값 사이 사이에 약간의 공백을 줌
+            await new Promise(resolve => setTimeout(resolve , 1000));
+
+            yield value;
+        }
+    }
+};
+
+(async () => {
+
+    for (let value of range) {
+        alert(value); // 1, 2, 3, 4, 5
+    }
+
+})();
+
+/* 이제 1초의 간격을 두고 값을 얻을 수 있다. */
+
+//////////////////////////////////////////////////////////////////////////
