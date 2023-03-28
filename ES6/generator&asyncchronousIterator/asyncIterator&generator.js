@@ -310,3 +310,30 @@ async function* fetchCommits(repo) {
  */
 
 //////////////////////////////////////////////
+
+/** 요약
+ * 일반적인 이터레이터와 제너레이터는 데이터를 가져오는 데 시간이 걸리지 않을 때가 적합하다.
+ * 그런데 약간의 지연이 있어서 데이터가 비동기적으로 들어오는 경우 
+ * async 이터레이터와 async 제너레이터, for..of 대신 for await..of를 사용하게 된다.
+ * 
+ * 일반 이터레이터와 async 이터레이터 문법 차이는 다음과 같다.
+ *                                                  iterable / async iterable
+ * iterator를 반환하는 메서드 -              Symbol.iterator / Symbol.asyncIterator
+ * next()가 반환하는 값       - {value:..., done:true/false} / {value:..., done:true/false}를 감싸는 Promise
+ */
+
+/*
+ * 일반 제너레이터와 async 제너레이터의 문법 차이는 다음과 같다.
+ *                                          generators / async generator
+ * 선언                 -                    function* / async function*s
+ * next()가 반환하는 값 - {value:..., done:true/false} / {value:..., done:true/false}를 감싸는 Promise
+ */
+
+/* 웹 개발을 하다 보면 띄엄띄엄 들어오는 데이터 스트림을 다뤄야 하는 경우가 자주 생긴다.
+ * 용량이 큰 파일을 다운로드하거나 업로드 할 때와 같이 말이다.
+ * 
+ * 이런 데이터를 처리할 때 async 제너레이터를 사용할 수 있다. 
+ * 참고로 브라우저 등의 몇몇 호스트 환경은 데이터 스트림을 처리할 수 있게 해주는 API인 Streams을 제공하기도 한다.
+ * Streams API에서 제공하는 특별한 인터페이스를 사용하면, 데이터를 변경하여 한 스트림에서 다른 스트림으로 데이터를 전달할 수 있다.
+ * 따라서 한쪽에서 받은 데이터를 다른 쪽에 즉각 전달하는 게 가능해진다.
+ */
