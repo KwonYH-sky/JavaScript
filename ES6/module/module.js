@@ -67,3 +67,70 @@ export function sayHi(user) {
  */
 
 ////////////////////////////////////////////
+
+/** 모듈의 핵심 기능 
+ * '일반' 스크립트와 모듈의 차이는 무엇일까?
+ * 모든 호스트 환경에 공통으로 적용되는 모듈의 핵심 기능을 알아보자.
+ */
+
+/** 1. 엄격 모드로 실행됨
+ * 모듈은 항상 엄격 모드(use strict)로 실행된다.
+ * 선언되지 않는 변수에 값을 할당하는 등의 코드는 에러를 발생시킨다.
+
+   <script type="module">
+      a = 5; // 에러
+   </script>
+
+ */
+
+/** 2. 모듈 레벨 스코프
+ * 모듈은 자신만의 스코프가 있다. 따라서 모듈 내부에서 정의한 변수나 함수는 다른 스크립트에서 접근할 수 없다.
+ * 
+ * user.js와 hello.js를 가져오고 user.js에서 선언한 변수 user를 hello.js에서 사용해보자.
+ * 에러가 나는 것을 확인 할 수 있다.
+ */
+/*
+// 📁 index.html
+<!DOCTYPE html>
+<script type="module" src="user.js"></script>
+<script type="module" src="hello.js"></script>
+*/
+// 📁 user.js
+let user = "John";
+
+// 📁 hello.js
+alert(user); // 모듈은 변수를 공유하기 않기 때문에 `Uncaught ReferenceError: user is not defined`라는 에러가 콘솔 패널에 출력된다.
+
+/* 외부에 공개하려는 모듈은 export 해야하고, 내보내진 모듈은 가져와 사용하려면 import 해줘야 한다.
+ * 전역변수를 대신하여 hello.js에 user.js를 가져와 필요한 기능을 얻을 수 있다.
+ * 
+ * 아래와 같이 코드를 수정하면 정상적으로 동작한다.
+ */
+/*
+// 📁 index.html
+<!DOCTYPE html>
+<script type="module" src="hello.js"></script>
+*/
+
+// 📁 user.js
+export let userA = "John";
+
+// 📁 hello.js
+import {userA} from './user.js'
+
+document.body.innerHTML = userA; // John
+
+/* 브라우저 환경에서도 <script type = "module">을 사용해 모듈을 만들면 독립적인 스코프가 만들어진다.
+   
+   <script type="module">
+      // user는 해당 모듈 안에서만 접근 가능하다.
+      let user = "John"
+   </script>
+
+   <script type="module">
+      alert(user) // Error: user is not defined
+   </script>
+   
+ * 참고로 브라우저 환경에서 부득이하게 window 레벨 전역 변수를 만들어야 한다면 window 객체에 변수를 명시적으로 할당하고
+ * window.user와 같이 접근하는 방식을 취하면 된다. 그런데 이 방법은 정말 필요한 경우에만 사용하길 바란다.
+ */
