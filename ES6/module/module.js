@@ -134,3 +134,110 @@ document.body.innerHTML = userA; // John
  * 참고로 브라우저 환경에서 부득이하게 window 레벨 전역 변수를 만들어야 한다면 window 객체에 변수를 명시적으로 할당하고
  * window.user와 같이 접근하는 방식을 취하면 된다. 그런데 이 방법은 정말 필요한 경우에만 사용하길 바란다.
  */
+
+/** 3. 단 한번만 평가됨
+ * 동일한 모듈이 여러 곳에서 사용되더라도 모듈은 최초 호출 시 단 한 번만 실행된다.
+ * 실행 후 결과는 이 모듈을 가져가려는 모든 모듈에 내보내진다.
+ * 이런 작동 방식은 중요한 결과를 초래한다.
+ * 
+ * alert 함수가 있는 모듈(alert.js)을 여러 모듈에서 가져오기로 해보자. 얼럿 창은 단 한 번만 나타난다.
+ */
+
+// 📁 alert.js
+alert("모듈이 평가되었습니다.");
+
+// 동일한 모듈을 여러 모듈에서 가져오기
+
+// 📁 1.js
+import `./alert.js`; // 얼럿창에 '모듈이 평가되었습니다!'가 출력된다.
+
+// 📁 2.js
+import `./alert.js`; // 아무 일도 발생하지 않는다.
+
+/* 실무에선 최상위 레벨 모듈을 대개 초기화나 내부에서 쓰이는 
+ * 데이터 구조를 만들고 이를 내보내 재사용하고 싶을 때 사용한다. 
+ * 
+ * 객체를 내보내는 모듈을 만들어보자.
+ */
+
+// 📁 admin.js
+export let admin = {
+   name: "John"
+};
+
+/* 이 모듈을 가져오는 모듈이 여러 개이더라도 앞서 설명한 것처럼 모듈은 최초 호출시 단 한번만 평가된다.
+ * 이때 admin 객체가 만들어지고 이 모듈을 가져오는 모든 모듈에 admin 객체가 전달된다.
+ * 
+ * 각 모듈 동일한 admin 객체가 전달된다.
+ */
+
+// 📁 1.js
+import { admin } from "./admin.js";
+admin.name = "Pete";
+
+// 📁 2.js
+import { admin } from "./admin.js";
+alert(admin.name); // Pete
+
+// 1.js와 2.js 모두 같은 객체를 가져오므로
+// 1.js에서 객체에 가한 조작을 2.js에서도 확인할 수 있다.
+
+/* 모듈은 단 한 번만 실행되고 실행된 모듈은 필요한 곳에 공유되므로 
+ * 어느 모듈에서 admin을 수정하면 다른 모듈에서도 변경사항을 확인 할 수 있다.
+ * 
+ * 이런 특징을 이용하면 모듈 *설정(configuration)*을 쉽게 할 수 있다.
+ * 최초로 실행되는 모듈의 객체 프로퍼티를 원하는 대로 설정하면 다른 모듈에서 이 설정을 그대로 사용할 수 있기 때문이다.
+ * 
+ * 예시를 통해 이에 대해 자세히 알아보자.
+ * 아래 admin.js 모듈은 어떤 특정한 기능을 제공해주는데, 
+ * 이 기능을 사용하려면 외부에서 admin 객체와 관련된 인증 정보를 받아와야 한다고 가정해보자
+ */
+
+// 📁 admin.js
+export let admin = { };
+
+export function sayHi() {
+   alert(`${admin.name}님, 안녕하세요!`);
+}
+
+/* 최초로 실행되는 스크립트인 init.js에서 admin.name을 설정해주었다.
+ * 이렇게 하면 admin.js를 포함한 외부 스크립트에서 admin.name에 저장된 정보를 볼 수 있다.
+ */
+
+// 📁 init.js
+import {admin} from './admin.js';
+admin.name = "보라";
+
+// 📁 other.js
+import {admin, sayHi} from './admin.js';
+
+alert(admin.name); // 보라
+
+sayHi(); // 보라님, 안녕하세요!
+
+/** 4. import.meta
+ * import.meta 객체는 현재 모듈에 대한 정보를 제공해준다.
+ * 
+ * 호스트 환경에 따라 제공하는 정보의 내용은 다른데, 브라우저 환경에선 스크립트 URL 정보를 얻을 수 있다.
+ * HTML 안에 있는 모듈이라면, 현재 실행 중인 웹페이지의 URL 정보를 얻을 수 있다.
+ 
+   <script type="module">
+      alert(import.meta.url); // script URL (인라인 스크립트가 위치해 있는 html 페이지의 URL)
+   </script>
+   
+ */
+
+/** 5. this는 undefined
+ * 모듈 최상위 레벨의 this는 undefined이다.
+ * 모듈이 아닌 일반 스크립트의 this는 전역 객체인 것과 대조된다.
+
+  <script>
+      alert(this); // window
+   </script>
+
+     <script type="module">
+      alert(this); // undefined
+   </script>
+ */
+
+/////////////////////////////////////////////////////
