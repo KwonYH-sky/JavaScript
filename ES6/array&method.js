@@ -682,4 +682,244 @@ alert( sorted ); // CSS, HTML, JavaScript
 alert( arr ); // HTML, JavaScript, CSS (no changes)
 */
 
-const copySorted = () => { };
+const copySorted = (arr) => arr.slice().sort();
+
+/* 해답
+slice()를 사용해 배열을 복사한 다음 정렬하면 됩니다.
+
+function copySorted(arr) {
+  return arr.slice().sort();
+}
+
+let arr = ["HTML", "JavaScript", "CSS"];
+
+let sorted = copySorted(arr);
+
+alert( sorted );
+alert( arr );
+*/
+
+// 확장 가능한 계산기
+/* 기능을 "확장"할 수 있는 계산기 객체를 만들어 주는 생성자 함수 Calculator를 작성해봅시다.
+
+Calculator는 두 단계를 거쳐 만들 수 있습니다.
+
+첫 번째 단계는 "1 + 2"와 같은 문자열을 받아서 “숫자 연산자 숫자” 형태(공백으로 구분)로 바꿔주는 
+메서드 calculate(str)를 구현하는 것입니다. 
+이 함수는 +와 -를 처리할 수 있어야 하고, 연산 결과를 반환해야 합니다.
+
+예시:
+
+let calc = new Calculator;
+
+alert( calc.calculate("3 + 7") ); // 10
+두 번째 단계는 계산기가 새로운 연산을 학습할 수 있도록 해주는 메서드 addMethod(name, func)를 추가해 주는 것입니다. 연산자 이름을 나타내는 name과 인수가 두개인 익명 함수 func(a,b)를 받는 새 메서드를 구현해야 하죠.
+
+구현된 메서드를 이용해 곱셈 *과 나눗셈 /, 거듭제곱 **연산자를 추가해주는 예시는 아래와 같습니다.
+
+let powerCalc = new Calculator;
+powerCalc.addMethod("*", (a, b) => a * b);
+powerCalc.addMethod("/", (a, b) => a / b);
+powerCalc.addMethod("**", (a, b) => a ** b);
+
+let result = powerCalc.calculate("2 ** 3");
+alert( result ); // 8
+참고사항:
+
+괄호나 복잡한 표현식 없이도 본 과제를 풀 수 있습니다.
+숫자와 연산자는 공백 하나로 구분합니다.
+에러 핸들링을 위한 코드를 추가해도 좋습니다(선택 사항).
+*/
+
+function Calculator() {
+   this.operator = {
+      "+" : (a, b) => a + b,
+      "-" : (a, b) => a - b
+   };
+
+   this.calculate = function (str) {
+      let arr = str.split(" ");
+      let result = this.operator[arr[1]] ? this.operator[arr[1]](+arr[0], +arr[2]) : alert("예러");
+      return result;
+   };
+
+   this.addMethod = function (name, func) {
+      this.operator[name] = func;
+   };
+}
+
+/** 해답
+ * 메서드는 this.methods 프로퍼티를 사용해 추가할 수 있습니다.
+ * 예외처리와 숫자형으로의 변환은 모두 메서드 calculate에서 처리하고 있습니다. 
+ * 이렇게 해야 추후 좀 더 복잡한 표현식을 추가할 수 있습니다.
+   function Calculator() {
+
+   this.methods = {
+      "-": (a, b) => a - b,
+      "+": (a, b) => a + b
+   };
+
+   this.calculate = function(str) {
+
+      let split = str.split(' '),
+         a = +split[0],
+         op = split[1],
+         b = +split[2];
+
+      if (!this.methods[op] || isNaN(a) || isNaN(b)) {
+         return NaN;
+      }
+
+      return this.methods[op](a, b);
+   };
+
+   this.addMethod = function(name, func) {
+      this.methods[name] = func;
+   };
+   }
+ */
+
+/** 이름 매핑하기
+ * name을 나타내는 프로퍼티를 가진 객체 user가 담긴 배열이 있습니다. 
+ * name의 값만 담은 새로운 배열을 만들어주는 코드를 작성해보세요.
+ */
+
+let john = { name: "John", age: 25 };
+let pete = { name: "Pete", age: 30 };
+let mary = { name: "Mary", age: 28 };
+
+let users = [ john, pete, mary ];
+
+let names = users.map(user => user.name);
+
+alert( names ); // John, Pete, Mary
+
+/** 해답
+let john = { name: "John", age: 25 };
+let pete = { name: "Pete", age: 30 };
+let mary = { name: "Mary", age: 28 };
+
+let users = [ john, pete, mary ];
+
+let names = users.map(item => item.name);
+
+alert( names ); // John, Pete, Mary
+ */
+
+/** 객체 매핑하기
+ * 세 개의 프로퍼티 name과 surname, id를 가진 객체 user가 담긴 배열이 있습니다.
+ * name과 surname을 조합해 fullName을 만들고, 
+ * 이를 이용해 두 개의 프로퍼티 id와 fullName을 가진 객체를 담은 새로운 배열을 반환해주는 코드를 작성해보세요.
+ */
+
+let john = { name: "John", surname: "Smith", id: 1 };
+let pete = { name: "Pete", surname: "Hunt", id: 2 };
+let mary = { name: "Mary", surname: "Key", id: 3 };
+
+let users = [ john, pete, mary ];
+
+let usersMapped = users.map(user => { 
+    newUser = { fullName: user.name + user.surname, id: user.id };
+    return newUser;
+});
+/*
+usersMapped = [
+  { fullName: "John Smith", id: 1 },
+  { fullName: "Pete Hunt", id: 2 },
+  { fullName: "Mary Key", id: 3 }
+]
+*/
+
+alert( usersMapped[0].id ) // 1
+alert( usersMapped[0].fullName ) // John Smith
+
+/** 해답
+et john = { name: "John", surname: "Smith", id: 1 };
+let pete = { name: "Pete", surname: "Hunt", id: 2 };
+let mary = { name: "Mary", surname: "Key", id: 3 };
+
+let users = [ john, pete, mary ];
+
+let usersMapped = users.map(user => ({
+  fullName: `${user.name} ${user.surname}`,
+  id: user.id
+}));
+
+alert( usersMapped[0].id ); // 1
+alert( usersMapped[0].fullName ); // John Smith
+
+ * 화살표 함수 우측에 괄호를 썼다는 점에 주목해주시기 바랍니다.
+ * 아래와 같이 괄호 없이 코드를 작성할 수 없습니다.
+   let usersMapped = users.map(user => {
+   fullName: `${user.name} ${user.surname}`,
+   id: user.id
+   });
+ * 앞서 배웠듯이 화살표 함수는 
+ * 본문이 없는 형태인 value => expr와 본문이 있는 형태인 value => {...} 두 방법으로 작성할 수 있습니다.
+ * 중괄호 {를 만나면 자바스크립트는 이를 객체의 시작이라 인식하지 않고 함수 본문이 시작되는 것이라 인식합니다. 
+ * 소괄호를 사용하면 이를 피할 수 있습니다.
+ */
+
+/** 나이를 기준으로 객체 정렬하기
+ * 프로퍼티 age가 있는 객체가 담긴 배열이 있습니다. 
+ * 이 배열을 age를 기준으로 정렬해주는 함수 sortByAge(users)를 만들어보세요.
+   let john = { name: "John", age: 25 };
+   let pete = { name: "Pete", age: 30 };
+   let mary = { name: "Mary", age: 28 };
+
+   let arr = [ pete, john, mary ];
+
+   sortByAge(arr);
+
+   // now: [john, mary, pete]
+   alert(arr[0].name); // John
+   alert(arr[1].name); // Mary
+   alert(arr[2].name); // Pete
+ */
+
+function sortByAge(arr) {
+   arr.sort((a, b) => a.age - b.age);
+} 
+
+/** 해답
+function sortByAge(arr) {
+  arr.sort((a, b) => a.age - b.age);
+}
+
+let john = { name: "John", age: 25 };
+let pete = { name: "Pete", age: 30 };
+let mary = { name: "Mary", age: 28 };
+
+let arr = [ pete, john, mary ];
+
+sortByAge(arr);
+
+// now sorted is: [john, mary, pete]
+alert(arr[0].name); // John
+alert(arr[1].name); // Mary
+alert(arr[2].name); // Pete
+ */
+
+/** 배열 요소 무작위로 섞기
+ * 배열의 요소를 무작위로 섞어주는 함수 shuffle(array)을 작성해 보세요.
+ * shuffle을 여러 번 실행하면 요소의 정렬 순서가 달라야 합니다. 예시를 살펴봅시다.
+let arr = [1, 2, 3];
+
+shuffle(arr);
+// arr = [3, 2, 1]
+
+shuffle(arr);
+// arr = [2, 1, 3]
+
+shuffle(arr);
+// arr = [3, 1, 2]
+// ...
+
+ * 문제를 풀 때 주의할 점은 모든 순열이 동일한 확률로 일어나야 한다는 점입니다. 
+ * 예를 들어 [1,2,3] 은 [1,2,3]이나 [1,3,2], [3,1,2]로 재정렬 될 수 있는데, 
+ * 이 배열들이 만들어지는 빈도는 같아야 합니다.
+ */
+
+function shuffle(arr) {
+   arr.sort(()=> Math.random() - 0.5);
+}
