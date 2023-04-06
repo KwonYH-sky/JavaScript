@@ -95,3 +95,107 @@ say.sayBye('John');
  */
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+/** import 'as'
+ * `as`를 사용하면 이름을 바꿔서 모듈을 가져올 수 있다.
+ * sayHi를 hi로, sayBye를 bye로 이름을 바꿔서 가져와 보자.
+ */
+
+// 📁 main.js
+import {sayHi as hi, sayBye as bye} from './say.js';
+
+hi('John'); // Hello, John!
+bye('John'); // Bye, John!
+
+/** Export 'as'
+ * `export`에도 `as`를 사용할 수 있다.
+ * sayHi와 sayBye를 각각 hi와 bye로 이름을 바꿔 내보내보자.
+ */
+
+// 📁 say.js
+function sayHi(user) { 
+    alert(`Hello, ${user}!`);
+}
+function sayBye(user) { 
+    alert(`Bye, ${user}!`);
+}
+
+export {sayHi as hi, sayBye as bye};
+
+/* 이제 다른 모듈에서 이 함수들을 가져올 땐 이름은 hi와 bye가 된다. */
+
+// 📁 main.js
+import * as say from './say.js'
+
+say.hi('John'); // Hello, John!
+say.bye('John'); // Bye, John!
+
+/** export default
+ * 모듈은 크게 두 종류로 나뉜다.
+    * 1. 복수의 함수가 있는 라이브러리 형태의 모듈(위 예시의 `say.js`)
+    * 2. 개체 하나만 선언되어있는 모듈(아래의 `user.js`. `class User` 하나만 내보개기 함)
+ * 
+ * 대개는 두 번째 방식으로 모듈을 만드는 걸 선호하기 때문에 함수, 클래스, 변수 등의 개체는 전용 모듈 안에 구현된다.
+ * 그런데 어떻게 모듈을 만들다 보면 자연스레 파일 개수가 많이질 수 밖에 없다. 
+ * 그렇더라도 모듈의 이름을 잘 지어주고, 폴더에 파일을 잘 나눠 프로젝트를 구성하면 코드 탐색이 어렵지 않으므로 이는 전혀 문제가 되지 않는다.
+ * 
+ * 모듈은 `export default`라는 특별한 문법을 지원한다. 
+ * `export default`를 사용하면 '해당 모듈엔 개체가 하나만 있다'는 사실을 명확히 나타낼 수 있다.
+ * 
+ * 내보내고자 하는 개체 앞에 `export default`를 붙여보자
+ */
+
+// 📁 user.js
+export default class User { // export 옆에 'default'를 추가해보았다.
+    constructor(name) {
+        this.name = name;
+    }
+}
+
+/* 파일 하나엔 대개 export default가 하나만 있다.
+ * 이렇게 default를 붙여서 모듈을 내보내면 중괄호 `{}` 없이 모듈을 가져올 수 있다.
+ */
+
+// 📁 main.js
+import User from './user.js'; // {User}가 아닌 User로 클래스를 가져왔다.
+
+new User('John');
+
+/* 중괄호 없이 클래스를 가져오니 가독성이 더 좋아진다.
+ * 모듈을 막 배우기 시작한 사람은 중괄호를 빼먹는 실수를 자주 한다.
+ * named export한 모듈을 가져오려면 중괄호가 필요하고,
+ * default export한 모듈을 가져오려면 중괄호가 필요하지 않다는 걸 기억해 실수를 방지하자.
+ * 
+ * named export             / default export
+ * `export class {...}`     / `export default class User {...}`
+ * `import {User} from ...` / `import User from ...`
+ * 
+ * 사실 named export와 default export를 같은 모듈에서 동시에 사용해도 문제는 없다.
+ * 그런데 실무에선 어렇게 섞어 쓰는 사례는 흔치 않다.
+ * 한 파일엔 named export나 default export 둘 중 하나만 사용한다.
+ * 
+ * 파일당 최대 하나의 default export가 있을 수 있으므로 내보낼 개체인 이름이 없어도 괜찮다.
+ * 
+ * 아래 예시의 개체엔 이름이 없지만 모두 에러 없이 잘 동작한다.
+
+    export default class { // 클래스 이름이 없음
+        constructor() {}
+    }
+
+    export default function(user) { // 함수 이름이 없음
+        alert(`Hello, ${user}!`);
+    }
+
+    // 이름 없이 배열 형태의 값을 내보냄
+    export default ['Jan', 'Feb', 'Mar', 'Apr', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+ * export default는 파일당 하나만 있으므로 이 개체를 가져오기 하려는 모듈에선 중괄호 없이도 
+ * 어떤 개체를 가지고 올지 정확히 알 수 있으므로 이름이 없어도 괜찮다.
+ * 
+ * default를 붙이지 않았다면 개체에 이름이 없는 경우 에러가 발생한다.
+
+    export class { // 에러! (default export가 아닌 경우엔 이름이 꼭 필요하다.)
+        constructor() {}
+    }
+ 
+ */
