@@ -199,3 +199,69 @@ new User('John');
     }
  
  */
+
+/** 'default' name
+ * `default` 키워드는 기본 내보내기를 참조하는 용도로 종종 사용된다.
+ * 함수를 내보낼 때 아래와 같이 함수 선언부와 떨어진 곳에서 `default` 키워드를 사용하면, 해당 함수를 기본 내보내기 할 수 있다.
+ */
+function sayHi(user) {
+    alert(`Hello, ${user}!`);
+}
+
+// 함수 선언부 앞에 'export default'를 붙여준 것과 동일하다.
+export {sayHi as default};
+
+/* 흔치 않지만 `user.js`라는 모듈에 'default' export 하나와 다수의 named export가 있다고 해보자. */
+
+// 📁 user.js
+export default class User {
+    constructor(name) {
+        this.name = name;
+    }
+}
+
+export function sayHi(user) {
+    alert(`Hello, ${user}!`);
+}
+
+/* 아래와 같은 방식을 사용하면 default export와 named export를 동시에 가져올 수 있다. */
+
+// 📁 main.js
+import {default as User, sayHi} from './user.js';
+
+new User('John');
+
+/* `*`를 사용해 모든 것을 객체 형태로 가져오는 방법도 있는데, 
+ * 이 경우엔 `default`프로퍼티는 정확히 default export를 가리친다. 
+ */ 
+
+// 📁 main.js
+import * as user from './user.js';
+
+let User = user.default; // default export
+new User('John');
+
+/** default export의 이름에 관한 규칙
+ * named export는 내보냈을 때 사용한 이름 그대로 가져오므로 관련 정보를 파악하기 쉽다.
+ * 그런데 아래와 같이 내보내기 할 때 쓴 이름과 가져오기 할 때 쓸 이름이 동일해야한다는 제약이 있다.
+ */
+import {User} from './user.js';
+// import {MyUser}은 사용할 수 없다. 반드시 {User}이어야 한다.
+
+/* named export와는 다르게 default export는 가져오기 할 때 개발자가 원하는 대로 이름을 지정해 줄 수 있다. */
+import User from './user.js'; // 동작
+import MyUser from './user.js'; // 동작
+// 어떤 이름이든 에러 없이 동작한다.
+
+/* 그런데 이렇게 자유롭게 이름을 짓다 보면 같은 걸 가져오는데도 이름이 달라 혼란의 여지가 생길 수 있다.
+ * 이런 문제를 예방하고 코드의 일관성을 유지하기 위해 default export한 것을 가져올 땐 
+ * 아래와 같이 파일 이름과 동일한 이름을 사용하도록 팀원끼리 내부 규칙을 정할 수 있다.
+
+    import User from './user.js';
+    import LoginForm from './loginForm.js';
+    import func from './path/to/func.js';
+    ....
+
+ */
+
+/////////////////////////////////////////////////////////////////////
