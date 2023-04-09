@@ -262,6 +262,138 @@ import MyUser from './user.js'; // 동작
     import func from './path/to/func.js';
     ....
 
+ * 그런데 규칙이 있으도 이를 지키지 않는 사람이 있을 수 있기 때문에 어떤 팀은 named export만을 강제하는 경우도 있다.
+ * 모듈 하나에서 단 하나의 개체만 내보내는 경우에도 `default`없이 이름을 붙여 내보내면 혼란을 방지할 수 있기 때문이다.
+ * 
+ * 이런 규칙은 모듈 다시 내보내기를 쉽게 해준다는 장점이 있다.
  */
 
 /////////////////////////////////////////////////////////////////////
+
+/** 모듈 다시 내보내기
+ * `export ... from ...` 문법을 사용하면 가져온 개체 즉시 '다시 내보내기(re-export)' 할 수 있다.
+ * 이름을 바꿔서 다시 내보낼 수 있는 것이다. 
+ */
+// 예시:
+export {sayHi} from './say.js'; // sayHi를 다시 내보내기 함
+
+export {default as User} from './user.js'; // default export를 다시 내보개기 함
+
+/* 다시 내보개기가 왜 필요한건지 의문이 든다. 유스 케이스를 통해 다시 내보내기가 실무에서 언제 사용되는지 알아보자.
+ * 
+ * NPM을 통해 외부에 공개할 '패키지(package)'를 만들고 있다고 가정하자.
+ * 이 패키지는 수많은 모듈로 구성되어있는데, 몇몇 모듈은 외부에 공개할 기능을, 
+ * 몇몇 모듈은 이러한 모듈을 도와주는 '헬퍼' 역활을 담당하고 있다.
+ * 
+ * 패키지 구조는 다음과 같다.
+    auth/
+        index.js
+        user.js
+        helpers.js
+        tests/
+            login.js
+        providers/
+            github.js
+            facebook.js
+            ...
+ * 진입점을 역할을 하는 '주요 파일'인 `auth/index.js`을 통해 기능을 외부에 노출시키면 
+ * 이 패키지를 사용하는 개발자는 아래와 같은 코드로 해당 기능을 사용할 것이다.
+ */
+import {login, logout} from 'auth/index.js';
+/* 이때 우리가 만든 패키지를 사용하는 외부 개발자가 패키지 안의 파일들을 뒤져 내부 구조를 건드리게 하면 안 된다.
+ * 그러려면 `auth/index.js`에 넣어 내보내기 하고 나머지는 숨기는 것이 좋다.
+ * 
+ * 이때 내보낼 기능을 패키지 전반에 분산하여 구현한 후, 
+ * `auth/index.js`에서 이 기능들을 가져오고 이를 다시 내보내면 원하는 바를 어느 정도 달성할 수 있다.
+ */
+
+// 📁 auth/index.js
+
+// login과 logout을 가지고 온 후 바로 내보낸다.
+import { login, logout } from './helpers.js'; 
+export { login, logout };
+
+// User를 가져온 후 바로 내보낸다.
+import User from './user.js';
+export {User};
+// ...
+
+/* 이제 외부 개발자들은 `import { login } from "auth/index.js"`로 우리가 만든 패키지를 이용할 수 있다.
+ * `export ... from ...`는 위와 같이 개체를 가지고 온 후 바로 내보낼 때 쓸 수 있는 문법이다.
+ * 아래 예시는 위 예시와 동일하게 동작한다.
+ */
+
+// 📁 auth/index.js
+// login과 logout을 가지고 온 후 바로 내보낸다.
+export {login, logout} from './helpers.js';
+
+// User 가져온 후 바로 내보낸다. 
+export {default as User} from './user.js';
+// ...
+
+/** default export 다시 내보내기
+ * 기본 내보내기를 다시 내보낼 때는 주의해야 할 점들이 있다.
+ * `user.js` 내의 클래스 `User`를 다기 내보내기를 한다고 가정해보자.
+ */
+// 📁 user.js
+export default class User {
+    // ...
+}
+
+/* 1. User를 `export User from './user.js'`로 다시 내보내기 할 때 문법 에러가 발생한다.
+    default export를 다시 내보내려면 위 예시처럼 `export {default as User}`를 사용해야 한다.
+ * 2. export * from './user.js'를 사용해 모든 걸 한 번에 다시 내보내려면 default export는 무시되고, 
+    named export만 다시 내보내진다.
+    두 가지를 동시에 내 보내고 싶다면 두 문을 동시에 사용해야 한다.
+
+    export * from './user.js'; // named export를 다시 내보내기
+    export {default} from './user.js'; // default export를 다시 내보내기
+
+ * default export를 다시 내보낼 땐 이런 특이한 상황도 인지하고 있다가 처리해줘야 하므로
+ * 몇몇 개발자들은 default export를 다시 내보내는것을 선호하지 않는다.
+ */
+
+////////////////////////////////
+
+/** 요약
+ * export 타입
+ * 클래스, 함수 등의 선언부 앞에 export 붙여서 내보내기:
+    * `export [default] class/function/variable ... `
+ * 이름 없는 개체 내보내기:
+    * `export { x [as y], ...}`
+ * 다시 내보내기:
+    * `export { x [as y], ...} from "module"`
+    * `export * from "module"` (default export는 다시 내보내 지지 않음)
+    * `export { default [as y] } from "module"` (default export를 다시 내보냄)
+ * 
+ * import 타입
+ * named export 가져오기:
+    * `import {x [as y], ...} from "mod"`
+ * default export 가져오기:
+    * `import x from "mod"`
+    * `import {default as x} from "mod"`
+ * 한번에 가져오기:
+    * `import * as obj from "mod"`
+ * 모듈을 가져오긴 하지만(코드는 실행됨), 변수에 할당하지 않기:
+    * import "mod"
+ * 
+ * import/export 문은 스크립트의 맨 위나 맨 아래에 올 수 있는데 이 둘엔 차이가 없다.
+ * 따라서 아래 스크립트는 문제없이 잘 동작한다.
+ */
+sayHi();
+
+// ...
+
+import {sayHi} from './say.js'; // import 문을 파일 맨 아래에 위치시킴
+
+/* 대개는 편의상 스크립트 맨 위에 import 문을 위치시킨다.
+ * "import/export 문은 블록 {...} 안에선 동작하지 않는다는 점을 유의하자."
+ * 조건을 충족하면 모듈을 가져오려는 의도로 작성된 아래 코드는 동작하지 않는다.
+ */
+if (something) {
+    import {sayHi} from "./say.js"; // 에러: import 문은 최상위 레벨에 위치해야 한다.
+} 
+/* 그런데 어플리케이션을 작성하다 보면 조건에 따라 모듈을 가져와야 하거나 
+ * 어떤 특정 시점에 모듈을 불러와야 하는 경우가 생긴다.
+ * 요청이 있을 때만 모듈을 불러오기 위해선 동적으로 모듈을 가져오는 방법(dynamic import)를 사용하면 된다.
+ */
