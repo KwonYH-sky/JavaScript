@@ -119,3 +119,66 @@ alert(date.getUTCHours());
 alert(new Date().getTimezoneOffset());
 
 /////////////////////////////////////////////////////////////////
+
+/** 날짜 구성요소 설정하기
+ * 아래 메서드를 사용하면 날짜 구성요소를 설정할 수 있다.
+   * setFullYear(year, [month], [date])
+   * setMonth(month, [date])
+   * setDate(date)
+   * setHours(hour, [min], [sec], [ms])
+   * setMinutes(min, [sec], [ms])
+   * setSeconds(sec, [ms])
+   * setMilliseconds(ms)
+   * setTime(milliseconds) (1970년 1월 1일 00:00:00 UTC부터 밀리초 이후를 나타내는 날짜를 설정)
+ * 
+ * setTime()을 제외한 모든 메서드는 setUTCHours()같이 표준시에 따라 날짜 구성 요소를 설정해주는 메서드가 있다.
+ * setHours와 같은 메서드는 여러 개의 날짜 구성요소를 동시에 설정할 수 있는데, 메서드의 인수에 없는 구성요소는 변경되지 않는다.
+ */
+// 예시
+let today = new Date();
+
+today.setHours(0);
+alert(today); // 날짜는 변경되지 않고 시만 0으로 변경.
+
+today.setHours(0, 0, 0, 0);
+alert(today); // 날짜는 변경되지 않고 시, 분, 초가 모두 변경(00시 00분 00초).
+
+
+
+/** 자동 고침
+ * Date 객체엔 자동 고침(autocorrection)이라는 유용한 기능이 있다. 
+ * 범위를 벗어나는 값을 설정하려고 하면 자동 고침 기능이 활성화되면서 값이 자동으로 수정된다.
+ */
+// 예시:
+date = new Date(2013, 0, 32); // 2013년 1월 32일은 없다.
+alert(date); // 2013년 2월 1일이 출력된다.
+
+/* 입력받은 날짜 구성 요소가 범위를 벗어나면 초과분은 자동으로 다른 날짜 구성요소에 배분된다.
+ * 
+ * '2016년 2월 28일'의 이틀 뒤 날짜를 구하고 싶다고 가장하자. 답은 3월 2일 혹은 3월 1일(윤년)이 될텐데,
+ * 2016년이 윤년인지 아닌지 생각할 필요 없이 단순히 이틀을 더해주기만 하면 답을 구할 수 있다.
+ * 나머지 작업은 Date 객체가 알아서 해주기 때문이다.
+ */
+date = new Date(2016, 1, 28);
+date.setDate(date.getDate() + 2);
+
+alert( date ); // 2016년 3월 1일
+
+/* 자동 고침은 일정 시간이 지난 후의 날짜를 구하는데도 종종 사용된다.
+ * '지금부터 70초 후'의 날짜를 구해보자.
+ */
+date = new Date();
+date.setSeconds(date.getSeconds() + 70);
+
+alert(date); // 70초 후의 날짜가 출력된다.
+
+/* 0이나 음수를 날짜 구성요소에 설정하는 것도 가능하다. */
+date = new Date(2016, 0, 2); // 2016년 1월 2일
+
+date.setDate(1); // 1일로 변경한다.
+alert(date); // 2016년 1월 1일
+
+date.setDate(0); // 일의 최솟값은 1이므로 0을 입력하면 전 달의 마지막 날을 설정한 것과 같은 효과를 본다.
+alert(date); // 2015년 12월 31일
+
+
