@@ -228,7 +228,158 @@ end = Date.now(); // done
 
 alert(`반복문을 모두 도는데 ${end - start} 밀리초 걸렸습니다.`); // Date 객체가 아닌 숫자끼리 차감함
 
-/**
+/** 벤치마크 테스트
+ * '벤치마크 테스트'는 비교 대상을 두고 성능을 비교하여 시험하고 평가할 때 쓰인다.
+ * CPU를 많이 잡아먹는 함수의 신뢰할만한 벤치마크(평가 기준)를 구하려면 상당한 주의가 필요하다.
+ * 두 날짜의 차이를 계산해주는 함수 두 개가 있는데, 어느 함수의 성능이 더 좋은지 알아내야 한가도 가정해보자.
+ */
+// 두 함수 중 date1과 date2의 차이를 어떤 함수가 더 빨리 반환할까?
+function diffSubtract(date1, date2) {
+   return date2 - date1;
+}
+
+// 반환 값은 밀리초이다.
+function diffGetTime(date1, date2) {
+   return date2.getTime() - date1.getTime();
+}
+
+/* 두 함수는 완전히 동일한 작업을 수행하지만, 한 함수는 날짜를 밀리초 단위로 얻기 위해 date.getTime()를 사용하고 있고,
+ * 다른 함수는 마이너스 연산자 적용 시 객체가 숫자형으로 반환한다는 특징을 사용하고 있다. 두 함수가 반환하는 값은 항상 동일하다.
  * 
+ * 속도의 차이는 어떨까?
+ * 연속해서 함수를 아주 많이 호출한 후, 실제 연산이 종료되는 데 걸리는 시간을 비교하면 두 함수의 성능을 비교할 수 있을 것이다.
+ * diffSubtract와 diffGetTime는 아주 간단한 함수이기 때문의 유의미한 시차를 구하려면 각 함수를 최소한 심만 번 호출해야한다.
+ */
+
+function diffSubtract(date1, date2) {
+   return date2 - date1;
+}
+
+function diffGetTime(date1, date2) {
+   return date2.getTime() - date1.getTime();
+}
+
+function bench(f) {
+   let date1 = new Date(0);
+   let date2 = new Date();
+
+   let start = Date.now();
+   for(let i = 0; i < 100000; i++) f(date1, date2);
+   return Date.now() - start;
+}
+
+alert( 'diffSubtract를 십만번 호출하는데 걸린 시간: ' + bench(diffSubtract) + 'ms' );
+alert( 'diffGetTime를 십만번 호출하는데 걸린 시간: ' + bench(diffGetTime) + 'ms' );
+
+/* 형 변환이 없어서 엔진 최적화에 드는 자원이 줄어들므로 getTime()을 이용한 방법이 활씬 바르다.
+ * 이 벤치마크는 그다지 좋은 벤치마크가 아니다.
  * 
+ * bench(diffSubtract)를 실행하고 있을 때 CPU가 어떤 작업을 병렬적으로 처리하고 있고, 
+ * 여기에 CPU의 자원이 투입되고 있었다고 가정해보자. 그리고 bench(diffGetTime)을 실행할 땐, 이 작업이 끝난 상태라고 가정하자.
+ * 
+ * 멀티 프로세스를 지원하는 운영체제에서 이런 시나리오는 흔히 발생한다.
+ * 첫 번째 `benchmark`가 실행될 땐 사용할 수 있는 CPU 자원이 적었기 때문에 이 벤치마크는 좋지 않다.
+ * 좀 더 신뢰할만한 벤치마크 테스트를 만들려면 benchmark를 번갈아 가면서 여러 번 둘려야 한다.
+ */
+
+function diffSubtract(date1, date2) {
+   return date2 - date1;
+}
+
+function diffGetTime(date1, date2) {
+   return date2.getTime() - date1.getTime();
+}
+
+function bench(f) {
+   let date1 = new Date(0);
+   let date2 = new Date();
+
+   let start = Date.now();
+   for(let i = 0; i < 100000; i++) f(date1, date2);
+   return Date.now() - start;
+}
+
+let time1 = 0;
+let time2 = 0;
+
+// 함수 bench를 각 함수(diffSubtract, diffGetTime)별로 10번씩 돌린다.
+for (let i = 0; i < 10; i++) {
+   time1 += bench(diffSubtract);
+   time2 += bench(diffGetTime);
+}
+
+alert( 'diffSubtract에 소모된 시간: ' + time1 );
+alert( 'diffGetTime에 소모된 시간: ' + time2 );
+
+/* 모던 자바스크립트 엔진은 아주 많이 실행된 코드인 'hot code'를 대상으로 최적화를 수행한다(실행 횟수가 적은 코드는 최적화할 필요없음).
+ * 위 예시에서 bench를 첫 번째 실행했을 때는 최적화가 잘 적용되지 않기 때문에 
+ * 아래 코드처럼 메인 반복문을 실행하기 전에 예열용(heat-up)으로 bench를 실행할 수 있다.
+ */
+
+// 메인 반복문 실행 전, "예열용"으로 추가한 코드
+bench(diffSubtract);
+bench(diffGetTime);
+
+// 벤치마크 테스트 시작
+for (let i = 0; i < 10; i++) {
+   time1 += bench(diffSubtract);
+   time2 += bench(diffGetTime);
+}
+
+/** !) 세밀한 벤치마킹을 할 때는 주의하자.
+ * 모던 자바스크립트 엔진은 최적화를 많이 한다. 이로 인해 '만들어진 테스트'가 '실제 사례'와는 결과가 다를 수 있다.
+ * 특히 연산자, 내장 함수와 같이 아주 작ㅇ느 것일수록 더 결과가 다를 수 있다. 
+ * 그러나 진지하게 성능을 이해하고 싶다면 자바스크립트 엔진이 어떻게 동작하는지 공부하자.
+ * 그러면 세밀한 벤치마킹을 할 필요가 없을 것이다.
+ */
+
+/** Date.parse와 문자열
+ * 메서드 Date.parse(str)를 사용하면 문자열에서 날짜를 읽어올 수 있다.
+ * 단 문저열의 형식은 `YYYY-MM-DDTHH:mm.ss.sssZ`처럼 생겨야 한다.
+   * `YYYY-MM-DD` - 날짜(연-월-일)
+   * "T" - 구분 기호로 쓰임
+   * `HH:mm:ss.sss` - 시:분:초.밀리초
+   * 'Z'(옵션) - `+-hh:mm` 형식의 시간대를 나타냄. Z 한 글자인 경우엔 UTC+0을 나타냄
+ * `YYYY-MM-DD`, `YYYY-MM`, `YYYY`같이 더 짧은 문자열 형식도 가능하다.
+ * 위 조건에 만족하는 문자열을 대상으로 Date.parse(str)를 호출하면 문자열과 대응하는 날짜의 타임스탬프가 반환된다.
+ * 문자열의 형식이 조건에 맞지 않는 경우엔 NaN이 반환된다.
+ */
+
+// 예시:
+let ms = Date.parse('2012-01-26T13:51:50.417-07:00');
+
+alert(ms); // 1327611110417;
+
+// Date.parse(str)를 이용하면 타임스탬프만으로도 새로운 Date 객체를 바로 만들 수 있다.
+date = new Date( Date.parse('2012-01-26T13:51:50.417-07:00') );
+
+alert(date);
+
+/** 요약
+   * 자바스크립트에선 Date 객체를 사용해 날짜와 시간을 나타낸다. 
+      Date객체엔 '날짜만' 혹은 '시간만' 저장하는 것은 불가능하고, 항상 날짜와 시간이 함께 저장된다.
+   * 월은 0부터 시작한다(0은 1월을 나타낸다).
+   * 요일은 `getDay()`를 사용하면 얻을 수 있는데, 요일 역시 0부터 시작한다(0은 일요일을 나타낸다).
+   * 범위를 넘어가는 구성요소를 설정하려 할 때 Date 자동 고침이 활성화된다.
+      이를 이용하면 월/일/시간을 쉽게 날짜에 추가하거나 뺄 수 있다.
+   * 날짜끼리 빼는 것도 가능한데, 이때 두 날짜의 밀리초 차이가 반환된다. 
+      이게 가능한 이유는 Date가 숫자형으로 바뀔 때 타임스탬프가 반환되기 때문이다.
+   * Date.now()를 사용하면 현재 시각의 타임스탬프를 빠르게 구할 수 있다.
+ * 
+ * 자바스크립트의 타임스탬프는 초가 아닌 밀리초 기준이라는 점을 항상 유의하자.
+ * 
+ * 간혹 밀리초보다 더 정확한 시간 측정이 필요할 때가 있다.
+ * 자바스크립트는 마이크로초(1/1,000,000초)를 지원하지 않지만 대다수의 호스트 환경은 마이크로초를 지원한다.
+ * 브라우저 환경의 메서드 performance.now()는 페이지 로딩에 걸리는 밀리초를 반환해주는데, 
+ * 반환되는 숫자는 소수점 아래 세 자리까지 지원한다.
+ */
+
+alert(`페이지 로딩 ${performance.now()}밀리초 전에 시작되었습니다.`);
+// 얼럿 창에 "페이지 로딩 34731.26000001밀리초 전에 시작되었습니다."와 유사한 메시지가 뜰 텐데
+// 여기서 '.26'은 마이크로초(260마이크로초)를 나타낸다.
+// 소수점 아래 숫자 세 개 이후의 숫자는 정밀도 에러때문에 보이는 숫자이므로 소수점 아래 숫자 세 개만 유효하다.
+
+/* Node.js에선 `microtime` 모듈 등을 사용해 마이크로초를 사용할 수 있다.
+ * 자바스크립트가 구동되는 대다수의 호스트 환경과 기기에서 마이크로초를 지원하고 있는데
+ * Date 객체만 마이크로초를 지원하지 않는다.
  */
