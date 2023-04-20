@@ -66,4 +66,94 @@ alert(json);
  * 문자열로 변환된(stringified), 결집된(marshalled) 객체라고 부른다.
  * 객체는 이렇게 문자열로 변환된 후에야 비로소 네크워크를 통해 전송하거나 저장소에 저장할 수 있다.
  * 
+ * JSON으로 인코딩된 객체는 일반 객체와 다른 특징을 보인다.
+    * 문자열은 큰따옴표로 감싸야 한다. JSON에선 작은따옴표나 백틱을 사용할 수 없다('John'이 "John"으로 변경된 것을 통해 이를 확인 할 수 있음).
+    * 객체 프로퍼티 이름은 큰따옴표로 감싸야 한다(age:30이 "age":30으로 변한 것을 통해 이를 확인할 수 있음). 
+ * 
+ * JSON.stringify는 객체뿐만 아니라 원시값에도 적용할 수 있다.
+ * 적용할 수 있는 자료형은 아래와 같다.
+    * 객체 {...}
+    * 배열 [...]
+    * 원시형:
+        * 문자형
+        * 숫자형
+        * 불린형 값 true와 false
+        * null
+ * 
  */
+
+// 예시:
+// 숫자를 JSON으로 인코딩하면 숫자이다.
+alert( JSON.stringify(1) ); // 1
+
+// 문자열을 JSON으로 인코딩하면 문자열이다(다만, 큰따옴표가 추가된다).
+alert( JSON.stringify('test') ); // "test"
+
+alert( JSON.stringify(true) );  // true
+
+alert( JSON.stringify([1, 2, 3]) ); // [1,2,3]
+
+/* JSON은 데이터 교환을 목적으로 만들어진 언어에 종속되지 않는 포맷이다.
+ * 따라서 자바스크립트는 특유의 객체 프로퍼티는 JSON.stringify가 처리할 수 없다.
+ * 
+ * JSON.stringify 호출시 무시되는 프로퍼티는 아래와 같다.
+    * 함수 프로퍼티(메서드)
+    * 심볼형 프로퍼티(키가 심볼인 프로퍼티)
+    * 값이 undefined인 프로퍼티
+ */
+
+user = {
+    sayHi(){ // 무시
+        alert("Hello"); 
+    },
+    [Symbol("id")]: 123, // 무시
+    something: undefined // 무시
+};
+
+alert( JSON.stringify(user) ); // {} (빈 객체가 출력됨)
+
+/* 대개 이 프로퍼티들은 무시 되어도 괜찮다. 그런데 이들도 문자열에 포함시켜야 하는 경우도 생기곤 한다.
+ * 
+ * JSON.stringify의 장점 중 하나는 중첩 객체도 알아서 문자열로 바꿔준다는 점이다.
+ */
+
+// 예시:
+let meetup = {
+    title:"Conference",
+    room: {
+        number: 23,
+        participants: ["john", "ann"]
+    }
+};
+
+alert( JSON.stringify(meetup) );
+/* 객체 전체가 문자열로 변환되었다.
+{
+    "title":"Conference",
+    "room":{"number":23, "participants": ["john", "ann"]},
+}
+*/
+
+/* JSON.stringify를 사용할 때 주의할 점이 하나 있다.
+ * 순환 참조가 있으면 원하는 대로 객체를 문자열로 바꾸는 게 불가능하다.
+ */
+
+// 예시:
+let room = {
+    number: 23
+};
+
+meetup = {
+    title:"Conference",
+    participants: ["john", "ann"]
+};
+
+meetup.place = room;        // meetup은 room을 참조한다.
+room.occupiedBy = meetup;   // room은 meetup을 참조한다.
+
+JSON.stringify(meetup); // Error: Converting circular structure to JSON
+
+/* room.occupiedBy는 meetup을, meetup.place는 room을 참조하기 때문에 JSON으로의 변환이 실패헀다. */
+
+////////////////////////////////////
+
