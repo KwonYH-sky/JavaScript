@@ -157,3 +157,111 @@ JSON.stringify(meetup); // Error: Converting circular structure to JSON
 
 ////////////////////////////////////
 
+/** replacer로 원하는 프로퍼티만 직렬화하기
+ * JSON.stringify의 전체 문법은 아래와 같다.
+ 
+    let json = JSON.stringify(value[, replacer, space])
+
+ * value
+    인코딩하는 값
+ * replacer
+    JSON으로 인코딩 하길 원하는 프로퍼티가 담긴 배열, 또는 매핑 함수 
+ * space
+    서식 변경 목적으로 사용할 공백 문자 수
+ 
+ * 대다수의 경우 JSON.stringify엔 인수를 하나만 넘겨서 사용한다.
+ * 그런데 순환 참조를 다뤄야 하는 경우같이 전환 프로세스를 정교하게 조정하려면 두 번째 인수를 사용해야 한다.
+ * 
+ * JSON으로 변환하길 원하는 프로퍼티가 담긴 배열을 두 번째 인수로 넘겨주면 이 프로퍼티들만 인코딩할 수 있다.
+ */
+// 예시:
+let room = {
+    number: 23
+};
+
+let meetup = {
+    title:"Conference",
+    participants: [{name: "John"}, {name: "Alice"}],
+    place: room // meetup은 room을 참조한다.
+}
+
+room.occupiedBy = meetup; // room은 meetup을 참조한다.
+
+alert( JSON.stringify(meetup, ['title', 'participants']) );
+// {"title":"Conference", "participants":[{}, {}]}
+
+/* 배열에 넣어준 프로퍼티가 잘 출력되었다. 그런데 배열에 name을 넣지 않아서 출력된 문자열의 participants가 텅 비어있다.
+ * 규칙이 너무 까다로워서 발생한 문제이다.
+ * 
+ * 순환 참조를 발생시키는 프로퍼티 room.occupiedBy만 제외하고 모든 프로퍼티를 배열에 넣어보자.
+ */
+
+let room = {
+    number: 23
+};
+
+let meetup = {
+    title:"Conference",
+    participants: [{name: "John"}, {name: "Alice"}],
+    place: room // meetup은 room을 참조한다.
+}
+
+room.occupiedBy = meetup; // room은 meetup을 참조한다.
+
+alert( JSON.stringify(meetup, ['title', 'participants', 'place', 'name', 'number']) );
+/*
+{
+    "title":"Conference", 
+    "participants":[{name: "John"}, {name: "Alice"}],
+    "place":{"number":23}
+}
+*/
+
+/* occupiedBy를 제외한 모든 프로퍼티가 직렬화되었다. 그런데 배열이 좀 길다는 느낌이 든다.
+ * `replacer` 자리에 배열 대신 함수를 전달해 이 문제를 해결해보자(매개변수 replacer는 '대신하다'라는 뜻을 가진 영단어이다).
+ * `replacer`에 전달되는 함수(replacer 함수)는 프로퍼티 (키, 값)쌍 전체를 대상으로 호출되는데, 
+ * 반드시 기존 프로퍼티 값을 대신하여 사용할 값을 반환해야 한다.
+ * 특정 프로퍼티를 직렬화에서 누락시키려면 반환 값을 undefined로 만들면 된다.
+ * 
+ * 아래 예시는 occupiedBy를 제외한 모든 프로퍼티의 값을 변경 없이 "그대로" 직렬화하고 있다.
+ * occupiedBy는 undefined를 반환하게 해 직렬화에 포함하지 않는 것도 확인해 보자.
+ */
+
+let room = {
+    number: 23
+};
+
+let meetup = {
+    title:"Conference",
+    participants: [{name: "John"}, {name: "Alice"}],
+    place: room // meetup은 room을 참조한다.
+}
+
+room.occupiedBy = meetup; // room은 meetup을 참조한다.
+
+alert( JSON.stringify(meetup, function replacer(key, value) {
+    alert(`${key}: ${value}`);
+    return (key == 'occupiedBy') ? undefined : value;
+} ));
+/* replacer 함수에서 처리하는 키:값 쌍 목록
+:             [object Object]
+title:        Conference
+participants: [object Object],[object Object]
+0:            [object Object]
+name:         John
+1:            [object Object]
+name:         Alice
+place:        [object Object]
+number:       23
+*/
+
+/* `replacer` 함수가 중첩 객체와 배열의 요소까지 포함한 모든 키-값 쌍을 처리하고 있다는 점에 주목하자.
+ * `replacer` 함수는 재귀적으로 키-값 쌍을 처리하는데, 함수 내에서 this는 현재 처리하고 있는 프로퍼티가 위치한 객체를 가리킨다.
+ * 
+ * 첫 얼럿창에 예상치 못한 문자열(":[object Object]")이 뜨는걸 볼 수 있는데, 이는 함수가 최초로 호출될 때 {"": meetup} 형태의 "래퍼 객체"가 만들어지기 때문이다.
+ * `replacer` 함수가 가장 처음으로 처리해야하는 (key, value) 쌍에서는 키는 빈 문자열, 값은 반환하고자 하는 객체(meetup) 전체가 되는 것이다.
+ * 
+ * 이렇게 replacer 함수를 사용하면 중첩 객체 등을 포함한 객체 전체에서 원하는 프로퍼티만 선택해 직렬화 할 수 있다.
+ */
+
+/////////////////////////////////////////////
