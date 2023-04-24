@@ -265,3 +265,45 @@ number:       23
  */
 
 /////////////////////////////////////////////
+
+/** space로 가독성 높이기
+ * JSON.stringify(value, replacer, space)의 세 번째 인수 space는 가독성을 높이기 위해 중간에 삽임해 줄 공백 문자 수를 나타낸다.
+ * 
+ * 지금까진 `space` 없이 메서드를 호출했기 때문에 인코딩된 JSON에 들여쓰기나 여분의 공백문자가 하나도 없었다.
+ * `space`는 가독성을 높이기 위한 용도로 만들어졌기 때문에 단순 전달 목적이라면 space 없이 직렬화하는 편이다.
+ * 
+ * 아래 예시처럼 `space`에 2를 넘겨주면 자바스크립트는 중첩 객체를 별도의 줄에 출력해주고 공백 문자 두 개를 써 들려쓰기를 해준다.
+ */
+user = {
+    name: "John",
+    age: 25,
+    roles: {
+        isAdmin: false,
+        isEditor: true
+    }
+};
+
+alert( JSON.stringify(user, null, 2) );
+/* 공백 문자 두 개를 사용하여 들여쓰기함:
+{
+  "name": "John",
+    "age": 25,
+    "roles": {
+        "isAdmin": false,
+        "isEditor": true
+    }
+}
+*/
+
+/* JSON.stringify(user, null, 4)라면 아래와 같이 좀 더 들여써진다.
+{
+    "name": "John",
+        "age": 25,
+        "roles": {
+            "isAdmin": false,
+            "isEditor": true
+        }
+}
+*/
+
+/* 이처럼 매개변수 space는 로깅이나 가독성을 높이는 목적으로 사용된다. */
