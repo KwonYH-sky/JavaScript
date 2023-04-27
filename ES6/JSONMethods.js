@@ -307,3 +307,59 @@ alert( JSON.stringify(user, null, 2) );
 */
 
 /* 이처럼 매개변수 space는 로깅이나 가독성을 높이는 목적으로 사용된다. */
+
+/** 커스텀 "toJSON"
+ * toString을 사용해 객체를 문자형으로 변환시키는 것처럼, 
+ * 객체에 toJSON이라는 메서드가 구현되어 있으면 객체를 JSON으로 바꿀 수 있을 것이다.
+ * JSON.stringify는 이런 경우를 감지하고 toJSON을 자동으로 호출해준다.
+ */
+
+// 예시:
+room = {
+    number: 23
+};
+
+meetup = {
+    title: "Conference",
+    date: new Date(Date.UTC(2017, 0, 1)),
+    room
+};
+
+alert( JSON.stringify(meetup) );
+/*
+{
+    "title":"Conference",
+    "date":"2017-01-01T00:00:00.000Z",  // (1)
+    "room":{"number":23}                // (2)
+}
+*/
+
+/* Date 객체의 내장 메서드 toJSON이 호출되면서 date의 값이 문자열로 변환된 걸 확인할 수 있다.( (1) ).
+ * 이번엔 room에 직접 커스텀 메서드 toJSON을 추가해보자. 그리고 (2)로 표시한 줄이 어떻게 변경되는지 확인하자.
+ */
+
+room = {
+    number: 23,
+    toJSON() {
+        return this.number;
+    }
+};
+
+meetup = {
+    title: "Conference",
+    room
+};
+
+alert( JSON.stringify(room) ); // 23
+
+alert( JSON.stringify(meetup) );
+/*
+{
+    "title":"Conference",
+    "room": 23
+}
+*/
+
+/* 위와 같이 toJSON은 JSON.stringify(room)를 직접 호출할 때도 사용할 수 있고, 
+ * room과 같은 중첩객체에도 구현하여 사용할 수 있다.
+ */
