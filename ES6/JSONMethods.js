@@ -363,3 +363,56 @@ alert( JSON.stringify(meetup) );
 /* 위와 같이 toJSON은 JSON.stringify(room)를 직접 호출할 때도 사용할 수 있고, 
  * room과 같은 중첩객체에도 구현하여 사용할 수 있다.
  */
+
+///////////////////////////////////////////
+
+/** JSON.parse
+ * JSON.parse를 사용하면 JSON으로 인코딩된 객체를 다시 객체로 디코딩할 수 있다.
+ * 문법:
+    let value = JSON.parse(str, [reviver]);
+ * 
+ * str
+    JSON 형식의 문자열 
+ * reviver
+    모든 (key, value) 쌍을 대상으로 호출되는 function(key, value) 형태의 함수로 값을 변경시킬 수 있다.
+ * 
+ */
+
+// 예시:
+// 문자열로 반환된 배열
+let numbers = "[0, 1, 2, 3]";
+
+numbers = JSON.parse(numbers);
+
+alert( numbers[1] ); // 1
+
+/* JSON.parse는 아래와 같이 중첨 객체에도 사용할 수 있다. */
+
+let userDate = '{"name": "John", "age": 35, "isAdmin": false, "friends":[0, 1, 2, 3] }';
+
+user = JSON.parse(userDate);
+
+alert( user.friends[1] );
+
+/* 중첩 객체나 중첨 배열이 있다면 JSON도 복잡해지기 마련인데, 그렇더라도 결국엔 JSON 포맷을 지켜야 한다.
+ * 
+ * 아래에서 디버깅 등의 목적으로 직접 JSON을 만들 때 흔히 저지르는 실수들이다.
+ * 이와 같은 실수를 저지르지 않게 주의하자.
+ */
+
+json = `{
+    name: "John",                           // 실수 1: 프로퍼티 이름을 큰따옴표로 감싸지 않았다.
+    "surname": 'Smith',                     // 실수 2: 프로퍼티 값은 큰따옴표로 감싸야 하는데, 작은따옴표로 감싸음
+    'isAdmin': false,                       // 실수 3: 프로퍼티 키은 큰따옴표로 감싸야 하는데, 작은따옴표로 감싸음
+    "birthday": new Date(2000, 2, 3),       // 실수 4: "new"를 사용할 수 없다. 순수한 값(bare value)만 사용할 수 있다.
+    "friends": [0,1,2,3]                    // 이 프로퍼티는 괜찮음.
+}`;
+
+/* JSON은 주석을 지원하지 않는다는 점도 기억하자. 주석을 추가하면 유효하지 않는 형식이 된다.
+ * 
+ * 키를 큰 따옴표로 감싸지 않아도 되고 주석도 지원해주는 JSON5라는 포맷도 있는데,
+ * 이 포맷은 자바스크립트 명세서에서 정의하지 않는 독자적인 라이브러리이다.
+ * 
+ * JSON 포맷이 까다로운 규칙을 가지게 된 이유는 개발자의 귀차니즘이 아니고,
+ * 쉽고 빠르며 신뢰할 수 있을 만한 파싱 알고리즘을 구현하기 위해서이다.
+ */
