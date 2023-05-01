@@ -416,3 +416,63 @@ json = `{
  * JSON 포맷이 까다로운 규칙을 가지게 된 이유는 개발자의 귀차니즘이 아니고,
  * 쉽고 빠르며 신뢰할 수 있을 만한 파싱 알고리즘을 구현하기 위해서이다.
  */
+
+/** reviver 사용하기
+ * 서버로부터 문자열로 변환된 meetup 객체를 전송받았다고 가정하자.
+ * 
+ * 전송받은 문자열은 아마 아래와 같이 생겼을 것이다.
+ */
+
+// title: (meetup 제목), date: (meetup 일시)
+let str = '{"title":"Conference", "date": "2017-11-30T12:00:00.000Z"}';
+
+/* 이제 이 문자열을 역 직렬화(deserialize) 해서 자바스크립트 객체를 만들어보자.
+ * 
+ * JSON.parse를 호출하자.
+ */
+
+str = '{"title":"Conference", "date": "2017-11-30T12:00:00.000Z"}';
+
+meetup = JSON.parse(str);
+
+alert( meetup.date.getDate() ); // 에러!
+
+/* meetup.date의 값은 Date 객체가 아니고 문자열이기 때문에 발생한 에러이다.
+ * 그렇다면 문자열을 Date로 전환해줘야 한다는 걸 어떻게 JSON.parse에게 알릴 수 있을까?
+ * 
+ * 이럴 때 JSON.parse의 두 번째 인수 reviver를 사용하면 된다.
+ * 모든 값은 "그대로", 하지만 `date`만큼은 `Date` 객체를 반환하도록 함수를 구현해보자.
+ */
+
+str = '{"title":"Conference", "date": "2017-11-30T12:00:00.000Z"}';
+
+meetup = JSON.parse(str, function(key, value) {
+    if (key == 'date') return new Date(value);
+    return value
+});
+
+alert( meetup.date.getDate() ); // 이제 제대로 동작한다.
+
+/* 참고로 이 방식은 중첩 객체에도 적용할 수 있다. */
+
+let schedule = `{
+    "meetups": [
+        {"title":"Conference", "date": "2017-11-30T12:00:00.000Z"},
+        {"title":"Birthday", "date": "2017-04-18T12:00:00.000Z"}
+    ]
+}`;
+
+schedule = JSON.parse(schedule, function(key, value) {
+    if (key == 'date') return new Date(value);
+    return value;
+});
+
+alert( schedule.meetups[1].date.getDate() ); // 잘 동작한다.
+
+/** 요약
+ * JSON은 독자적인 표준을 가진 데이터 형식으로, 대부분 언어엔 JSON을 쉽게 다룰 수 있게 해주는 라이브러리가 있다.
+ * JSON은 일반 객체, 배열, 문자열, 숫자, 불린값, null을 지원한다.
+ * JSON.stringify를 사용하면 원하는 값을 JSON으로 직렬화 할 수 있고, JSON.parse를 사용하면 JSON을 본래 값으로 역 직렬화할 수 있다.
+ * 위 두 메서드에 함수를 인수로 넘겨주면 원하는 값만 읽거나 쓰는 게 가능하다.
+ * JSON.stringify는 객체에 toJSON 메서드가 있으면 이를 자동으로 호출해준다.
+ */
