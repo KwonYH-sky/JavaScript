@@ -80,3 +80,83 @@ for (let key in proxy) alert(key); // test, 반복도 잘 동작한다. -- (3)
 
 ////////////////////////////////////////////////////////////////
 
+/** get 트랩으로 프로퍼티 기본값 설정하기
+ * 가장 흔히 볼 수 있는 트랩은 프로퍼티를 읽거나 쓸 때 사용되는 트랩이다.
+ * 프로퍼티 읽기를 가로채려면 handler에 get(target, property, receiver) 메서드가 있어야 한다.
+ * 
+ * get 메서드는 프로퍼티를 읽으려고 할 때 작동한다. 인수는 다음과 같다.
+   * target - 동작을 전달할 객체로 new Proxy의 첫 번째 인자이다.
+   * property - 프로퍼티 이름
+   * receiver - 타깃 프로퍼티 getter라면 receiver는 getter가 호출될 때 this이다. 대가는 proxy 객체 자신이 this가 된다.
+      프록시 객체를 상속받은 객체가 있다면 해당 객체가 this가 되기도 한다. 
+ * 
+ * get을 활용해 객체에 기본값을 설정해보자.
+ * 예시에서 만들 것은, 존재하지 않는 요소를 읽으려고 할 때 기본값 0을 반환해주는 배열이다.
+ * 존재하지 않는 요소를 읽을려고 하면 배열은 원래 undefined을 반환하는데, 
+ * 예시에선 배열(객체)을 프록시에 감싸서 존재하지 않는 요소(프로퍼티)를 읽을려고 할 때 0이 반환되도록 하자.
+ */
+
+let numbers = [0, 1, 2];
+
+numbers = new Proxy(numbers, {
+   get(target, prop) {
+      if (prop in target) {
+         return target[prop];
+      } else {
+         return 0; // 기본값
+      }
+   }
+});
+
+alert( numbers[1] ); // 1
+alert( numbers[123] ); // 0 {해당하는 요소가 배열에 없으므로 0이 반환됨}
+
+/* 예시를 통해 알 수 있듯이 get을 사용해 트랩을 만드는 건 상당히 쉽다.
+ * Proxy를 사용하면 '기본'값 설정 로직을 원하는 대로 구현할 수 있다.
+ * 구절과 번역문이 저장되어있는 사전이 있다고 가정해보자.
+ */
+
+let dictionary = {
+   'Hello' : '안녕하세요',
+   'Bye' : '안녕히 가세요'
+};
+
+alert( dictionary['Hello'] ); // 안녕하세요
+alert( dictionary['Welcome'] ); // undefined
+
+/* 지금 상태론 dictionary에 없는 구절에 접근하면 undefined가 반환된다. 
+ * 사전에 없는 구절을 검색하려 했을 때 undefined가 아닌 구절 그대로를 반환해주는 게 더 좋을 것이다.
+ * 
+ * dictionary를 프록시로 감싸서 프로퍼티를 읽을려고 할 때 이를 프록시가 가로채도록 하면 원하는 기능을 구현할 수 있다.
+ */
+
+dictionary = {
+   'Hello' : '안녕하세요',
+   'Bye' : '안녕히 가세요'
+};
+
+dictionary = new Proxy(dictionary, {
+   get(target, phrase) { // 프로퍼티를 읽기를 가로챈다.
+      if (phrase in target) { // 조건: 사전에 구절이 있는 경우
+         return target[phrase]; // 번역문을 반환한다.
+      } else {
+         // 구절이 없는 경우엔 구절 그대로를 반환한다.
+         return phrase;
+      }
+   }
+});
+
+// 사전을 검색해보자.
+// 사전에 없는 구절을 입력하면 입력값이 그대로 반환된다.
+alert( dictionary['Hello'] ); // 안녕하세요
+alert( dictionary['Welcome to Proxy'] ); // Welcome to Proxy (입력값이 그대로 출력됨)
+
+/* i) 주의:
+ * 프록시 객체가 변수를 어떻게 덮어쓰고 있는지 눈여겨보자.
+
+   dictionary = new Proxy(dictionary, ...);
+
+ * 타깃 객체의 위치와 상관없이 프록시 객체는 타깃 객체를 덮어써야만 한다.
+ * 객체를 프록시로 감싼 이후엔 절대로 타깃 객체를 참조하는 코드가 없어야 한다.
+ * 그렇지 않으면 엉망이 될 확률이 아주 높아진다.
+ */
