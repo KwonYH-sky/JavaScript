@@ -160,3 +160,55 @@ alert( dictionary['Welcome to Proxy'] ); // Welcome to Proxy (입력값이 그�
  * 객체를 프록시로 감싼 이후엔 절대로 타깃 객체를 참조하는 코드가 없어야 한다.
  * 그렇지 않으면 엉망이 될 확률이 아주 높아진다.
  */
+
+/** set 트랩으로 프로퍼티 값 검증하기
+ * 숫자만 저장할 수 있는 배열을 만들고 싶다고 가정하자. 숫자형이 아닌 값을 추가하려고 하면 에러가 발생하도록 해야한다.
+ * 프로퍼티에 값을 쓰려고 할 때 이를 가로채는 set 트랩을 사용해 이를 구현하자.
+ * set 메서드의 인수는 아래와 같은 역할을 한다.
+   set(target, property, value, receiver) :
+   * target - 동작을 전달할 객체로 new Proxy의 첫 번째 인자이다.
+   * property - 프로퍼티 이름
+   * value - 프로퍼티 값
+   * receiver - get 트랩과 유사하게 동작하는 객체로, setter 프로퍼티에만 관여한다.
+ * 우리가 구현해야 할 set 트랩은 숫자형 값을 설정하려 할 때만 true를, 
+ * 그렇지 않는 경우엔(TypeError가 트리가 되고) false를 반환하도록 해야한다.
+ * 
+ * set 트랩을 사용해 배열에 추가하려는 값이 숫자형인지 검증하자.
+ */
+
+numbers = [];
+
+numbers = new Proxy(numbers, { // (*)
+   set(target, prop, val) { // 프로퍼티에 값을 쓰는 동작을 가로챈다.
+      if (typeof val == 'number') {
+         target[prop] = val;
+         return true;
+      } else {
+         return false;
+      }
+   }
+});
+
+numbers.push(1); // 추가 성공
+numbers.push(2); // 추가 성공
+alert("Length is: " + numbers.length); // 2
+
+numbers.push("test"); // Error: 'set' on proxy
+
+alert("윗줄에서 에러가 발생했기 때문에 이 줄은 절대 실행되지 않는다.");
+
+/* 배열 관련 기능들은 여전히 사용할 수 있다는 점에서 주목하자.
+ * push를 사용해 배열에 새로운 요소를 추가하고 length 프로퍼티는 이를 잘 반영하고 있다는 것을 통해 확인이 가능하다.
+ * 프록시를 사용해도 기존에 있던 기능은 절대로 손상되지 않는다.
+ * 
+ * push나 unshift 같이 배열에 값을 추가해주는 메서드들은 내부에서 [[Set]]을 사용하고 있기 때문에 
+ * 메서드를 오버라이드 하지 않아도 프록시가 동작을 가로채고 값을 검증해준다.
+ * 코드가 깨끗하고 간결해지는 효과가 있다.
+ */
+
+/** !) true를 잊지 말고 반환해주자.
+ * 위에서 언급했듯이 꼭 지켜야할 규칙이 있다.
+ * set 트랩을 사용할 땐 값을 쓰는 게 성공했을 때 반드시 true를 반환해줘야 한다.
+ * true를 반환하지 않았거나 falsy한 값을 반환하게 되면 TypeError가 발생한다.
+ */
+
