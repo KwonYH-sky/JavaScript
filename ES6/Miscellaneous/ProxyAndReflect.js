@@ -212,3 +212,80 @@ alert("윗줄에서 에러가 발생했기 때문에 이 줄은 절대 실행되
  * true를 반환하지 않았거나 falsy한 값을 반환하게 되면 TypeError가 발생한다.
  */
 
+///////////////////////////////////
+
+/** ownKeys와 getOwnPropertyDescriptor로 반복 작업하기
+ * Object.keys, for..in 반복문을 비롯한 프로퍼티 순환 관련 메서드 대다수는 
+ * 내부 메서드 [[OwnPropertyKeys]] (트랩 메서드는 OwnKeys 임)를 사용해 프로퍼티 목록을 얻는다.
+ * 
+ * 그런데 세부 동작 방식엔 차이가 있다.
+   * Object.getOwnPropertyNames(obj) - 심볼형이 아닌 키만 반환한다.
+   * Object.getOwnPropertySymbols(obj) - 심볼형 키만 반환한다.
+   * Object.keys/values() - enumerable 플래그가 true이면서 심볼형이 아닌 키나 심볼형이 아닌 키에 해당하는 값 전체를 반환한다.
+   * for..in 반복문 - enumerable 플러그가 true인 심볼형이 아닌 키, 프로토타입 키를 순회한다.
+ * 
+ * 메서드마다 차이가 있지만 [[OwnPropertyKeys]]를 통해 프로퍼티 목록을 얻는다는 점은 동일하다.
+ * 
+ * 아래 예시에선 ownKeys 트랩을 사용해 _로 시작하는 프로퍼티는 for..in 반복문의 순환 대상에서 제외하도록 해보자.
+ * ownKeys를 사용했기 때문에 Object.keys와 Object.values에도 동일한 로직이 적용되는 것을 확인할 수 있다.
+ */
+
+let user = {
+   name: "John",
+   age: 30,
+   _password: "***"
+};
+
+user = new Proxy(user, {
+   ownKeys(target) {
+      return Object.keys(target).filter(key => !key.startsWith('-'));
+   }
+});
+
+// "ownKeys" 트랩은 _password를 건너뛴다.
+for(let key in user) alert(key); // name, age
+
+// 아래 두 메서드에도 동일한 로직이 적용된다.
+alert(Object.keys(user)); // name, age
+alert(Object.values(user)); // John, 30
+
+/* 객체 내에 존재하지 않는 키를 반환하려고 하면 Object.keys는 이 키를 제대로 보여주지 않는다. */
+
+user = { };
+
+user = new Proxy(user, {
+   ownKeys(target) {
+      return ['a', 'b', 'c'];
+   }
+});
+
+alert( Object.keys(user) ); // <빈 문자열>
+
+/* Object.keys는 enumerable 플래그가 있는 프로퍼티만 반환하기 때문에 위와 같은 현상이 나타난다.
+ * 이를 확인하기 위해 Object.keys는 내부 메서드인 [[GetOwnProperty]]를 호출해 모든 프로퍼티의 설명자를 확인한다.
+ * 위 예시의 프로퍼티는 설명자가 하나도 없고 enumerable 플래그도 없으므로 순환 대상에서 제외된다.
+ * 
+ * Object.keys 호출 시 프로퍼티를 반환하게 하려면 enumerable 플래그를 붙여줘 프로퍼티가 객체에 존재하도록 하거나
+ * [[GetOwnProperty]]가 호출될 때 이를 중간에서 가로채서 설명자 enumerable: true로 반환하게 해주면 된다.
+ * getOwnPropertyDescriptor 트랩이 이때 사용된다.
+ */
+
+user = { };
+
+user = new Proxy(user, {
+   ownKeys(target) { // 프로퍼티 리스트를 얻을 때 딱 한 번 호출된다.
+      return ['a', 'b', 'c'];
+   },
+
+   getOwnPropertyDescriptor(target, prop) { // 모든 프로퍼티를 대상으로 호출된다.
+      return {
+         enumerable: true,
+         configurable: true
+         /* 이 외의 플래그도 반환할 수 있다. "value:..."도 가능 */
+      };
+   }
+});
+
+alert( Object.keys(user) ); // a, b, c
+
+/* 객체에 프로퍼티가 없을 때 [[GetOwnProperty]]만 가로채면 된다는 점을 다시 한번 상기하자. */
