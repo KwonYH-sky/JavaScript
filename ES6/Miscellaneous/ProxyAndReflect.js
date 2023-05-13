@@ -289,3 +289,77 @@ user = new Proxy(user, {
 alert( Object.keys(user) ); // a, b, c
 
 /* 객체에 프로퍼티가 없을 때 [[GetOwnProperty]]만 가로채면 된다는 점을 다시 한번 상기하자. */
+
+/** deleteProperty와 여러 트랩을 사용해 프로퍼티 보호하기
+ * `_`(밑줄)이 앞에 붙은 프로퍼티나 메서드는 내부용으로만 쓰도록 하는 컨벤션은 널리 사용되고 있는 컨벤션 중 하나이다.
+ * `_`이 앞에 붙으면 객체 바깥에선 이 프로퍼티에 접근해선 안 된다.
+ * 
+ * 그렌데 기술적으론 가능하다.
+ */
+user = {
+   name: "John",
+   _password: "비밀"
+};
+
+alert(user._password); // 비밀
+
+/* 프록시를 사용해 _로 시작하는 프로퍼티에 접근하지 못하도록 막아보자.
+ * 원하는 기능을 구현하려면 아래와 같은 트랩이 필요하다.
+   * get - 프로퍼티를 읽으려고 하면 에러를 던져줌
+   * set - 프로퍼티에 쓰려고 하면 에러를 던져줌
+   * deleteProperty - 프로퍼티를 지우려고 하면 에러를 던져줌
+   * ownKeys - for..in이나 Object.keys 같은 프로퍼티 순환 메서드를 사용할 때 _로 시작하는 메서드는 제외함
+ * 
+ */
+
+user = {
+   name: "John",
+   _password: "***"
+};
+
+user = new Proxy(user, {
+   get(target, prop) { // 프로퍼티 읽기를 가로챈다.
+      if(prop.startsWith('_')) {
+         throw new Error("접근이 제한되어있습니다.");
+      }
+      let value = target[prop];
+      return (typeof value === 'function') ? value.bind(target) : value; // (*)
+   },
+   set(target, prop, val) { // 프로퍼티 쓰기를 가로챈다.
+      if (prop.startsWith('_')) {
+         throw new Error("접근이 제한되어있습니다.")
+      } else {
+         target[prop] = val;
+         return true;
+      }
+   },
+   deleteProperty(target, prop) { // 프로퍼티 삭제를 가로챈다.
+      if (prop.startsWith('_')) {
+         throw new Error("접근이 제한되어있습니다.")
+      } else {
+         delete target[prop];
+         return true;
+      }
+   },
+   ownKeys(target) { // 프로퍼티 순회를 가로챈다.
+      return Object.keys(target).filter(key => !key.startsWith('_'));
+   }
+});
+
+// "get" 트랩이 _password 읽기를 막는다.
+try {
+   alert(user._password); // Error: 접근이 제한되어있습니다.
+} catch (e) { alert(e.message); }
+
+// "set" 트랩이 _password에 값을 쓰는 것을 막는다.
+try {
+   user._password = "test"; // Error: 접근이 제한되어있습니다.
+} catch (e) { alert(e.message); }
+
+// "deleteProperty" 트랩이 _password 삭제를 막는다.
+try {
+   delete user._password; // Error: 접근이 제한되어있습니다.
+} catch (e) { alert(e.message); }
+
+// "ownKeys" 트랩이 순회 대상에서 _password를 제외시킨다.
+for (let key in user) alert(key); // name
