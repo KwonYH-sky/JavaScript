@@ -363,3 +363,80 @@ try {
 
 // "ownKeys" 트랩이 순회 대상에서 _password를 제외시킨다.
 for (let key in user) alert(key); // name
+
+/* get 트랩의 (*)로 표시한 줄을 보자 
+
+   get(target, prop) {
+      //...
+      let value = target[prop];
+      return (typeof value === 'function') ? value.bind(target) : value; // (*)
+   }
+
+/* 함수인지 여부를 확인하여 value.bind(target)를 호출하고 있다.
+ * 이유는 user.checkPassword() 같은 객체 메서드가 _password에 접근 할 수 있게 해주기 위함이다.
+ */
+
+user = {
+   // ...
+   checkPassword(value) {
+      // checkPassword(비밀번호 확인)는 _password를 읽을 수 있어야 한다.
+      return value === this._password;
+   }
+}
+
+/* user.checkPassword()를 호출하면 점 앞의 객체가 this가 되므로 프록시로 감싼 user에 접근하게 되는데,
+ * this._password는 get 트랩(프로퍼티를 읽으려고 하면 동작함)을 활성화하므로 에러가 던져진다. 
+ * 
+ * (*)로 표시한 줄에선 객체 메서드의 컨텍스트를 원본 객체인 target에 바인딩시켜준 이유는
+ * checkPassword()를 호출할 땐 언제든 트랩 없이 target이 this가 되게 하기 위해서이다.
+ * 
+ * 이 방법은 대부분 잘 작동하긴 하는데 메서드가 어딘가에서 프록시로 감싸진 않는 객체를 넘기게되면 
+ * 엉망진창이 되어버리기 때문에 이상적인 방법은 아니다. 기존 객체와 프록시로 감싼 객체가 어디에 있는지 파악할 수 없기 때문이다.
+ * 
+ * 한 객체를 여러 번 프록시로 감쌀 경우 각 프록시마다 객체에 가하는 '수정'이 다를 수 있다는 점 또한 문제이다.
+ * 프록시로 감싸지 않는 객체를 메서드에 넘기는 경우처럼 예상치 않는 결과가 나타날 수 있다.
+ * 
+ * 따라서 이런 형태의 프록시는 어디서든 사용해선 안된다.
+ */
+
+/* i) 클래스와 private 프로퍼티
+ * 모던 자바스크립트 엔진은 클래스 내 private 프로퍼티를 사용할 수 있게 해준다. 
+ * private 프로퍼티는 프로퍼티 앞에 #을 붙이면 만들 수 있다.
+ * private 프로퍼티를 사용하면 프록시 없이도 프로퍼티를 보호할 수 있다.
+ * 
+ * 그런데 private 프로퍼티는 상속이 불가능하다는 단점이 있다.
+ */
+
+//////////////////////////////
+
+/** has 트랩으로 '범위' 내 여부 확인하기.
+ * 범위를 담고 있는 객체가 있다.
+ */
+
+let range = {
+   start: 1,
+   end: 10
+};
+
+/* in 연산자를 사용해 특정 숫자가 range 내에 있는지 확인해보자.
+ * has 트랩은 in 호출을 가로챈다.
+ * 
+ * has(target, property)
+   * target - new Proxy의 첫 번째 인자로 전달되는 타깃 객체
+   * property - 프로퍼티 이름
+ * 
+ * 예시:
+ */
+range = {
+   start: 1,
+   end: 10
+};
+
+range = new (range, {
+   has(target, prop) {
+      return prop >= target.start && prop <= target.end
+   }
+});
+
+alert(5 in range); // true
+alert(50 in range); // false
