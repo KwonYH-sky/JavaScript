@@ -440,3 +440,36 @@ range = new (range, {
 
 alert(5 in range); // true
 alert(50 in range); // false
+
+/////////////////////////////////
+
+/** apply 트랩으로 함수 감싸기
+ * 함수 역시 프록시로 감쌀 수 있다.
+ * apply(target, thisArg, args) 트랩은 프록시를 함수처럼 호출하려고 할 때 동작한다.
+   * target - 타깃 객체(자바스크립트에서는 함수는 객체임)
+   * thisArg - this의 값
+   * args - 인수 목록
+ * 
+ * delay(f, ms) 데코레이터(decorator)가 있다.
+ * delay(f, ms)를 호출하면 하면 함수가 반환되는데, 이 함수는 함수 f가 ms밀리초 후에 호출된다.
+ * 
+ * 함수를 기반으로 작성한 데코레이터는 다음과 같다.
+ */
+function delay(f, ms) {
+   // 지정한 시간이 흐른 다음에 f 호출을 전달해주는 래퍼 함수를 반환한다.
+   return function () { // (*)
+      setTimeout(() => f.apply(this, arguments), ms);
+   };
+}
+
+function sayHi(user) {
+   alert(`Hello, ${user}!`);
+}
+
+// 래퍼 함수로 감싼 다음에 sayHi를 호출하면 3초 후 함수가 호출된다.
+sayHi = delay(sayHi, 3000);
+
+sayHi("John"); // Hello, John! (3초 후)
+
+/* (*)로 표시 한 곳의 래퍼 함수는 일정 시간 후 함수를 호출할 수 있게 해준다.
+ */
