@@ -472,4 +472,50 @@ sayHi = delay(sayHi, 3000);
 sayHi("John"); // Hello, John! (3초 후)
 
 /* (*)로 표시 한 곳의 래퍼 함수는 일정 시간 후 함수를 호출할 수 있게 해준다.
+ * 
+ * 그런데 래퍼 함수는 프로퍼티 읽기/쓰기 등의 연산을 전달하지 못한다. 
+ * 래퍼 함수로 감싸고 난 다음엔 기존 함수의 프로퍼티(name, length 등) 정보가 사라진다.
+ */
+
+function delay(f, ms) {
+   return function () { 
+      setTimeout(() => f.apply(this, arguments), ms);
+   };
+}
+
+function sayHi(user) {
+   alert(`Hello, ${user}!`);
+}
+
+alert(sayHi.length); // 1 (함수 정의부에서 명시한 인수의 개수)
+
+sayHi = delay(sayHi, 3000);
+
+alert(sayHi.length); // 0 (래퍼 함수 정의부엔 인수가 없음)
+
+/* Proxy 객체는 타깃 객체에 모든 것을 전달해주므로 휠씬 강력하다.
+ * 래퍼 함수 대신 Proxy를 사용하자
+ */
+
+function delay(f, ms) {
+   return new Proxy(f, {
+      apply(target, thisArg, args) {
+         setTimeout(() => target.apply(thisArg, args), ms);
+      }
+   });
+} 
+
+function sayHi(user) {
+   alert(`Hello, ${user}!`);
+}
+
+sayHi = delay(sayHi, 3000);
+
+alert(sayHi.length); // 1 (*) 프록시는 "get length" 연산까지 타깃 객체에 전달해준다.
+
+sayHi("John"); // Hello, John! (3초 후)
+
+/* 결과는 같지만 이번엔 호출뿐만 아니라 프록시에 가하는 모든 연산이 원본 함수에 전달된 것을 확인할 수 있다. 
+ * 원본 함수를 프록시로 감싼 이후엔 (*)로 표시한 줄에서 sayHi.length가 제대로 된 결과를 반환하고 있는 것을 확인힐 수 있다.
+ * 즉, 좀 더 성능이 좋은 래퍼를 갖게 되었다.
  */
