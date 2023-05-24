@@ -25,3 +25,61 @@ window.sayHi();
 alert(window.innerHeight); // 창 내부(inner window) 높이
 
 /* window 객체엔 다양한 메서드와 프로퍼티가 있다. */
+
+/** 문서 객체 모델(DOM)
+ * 문서 객체 모델(Document Object Model, DOM)은 웹 페이지 내의 모든 콘텐츠를 객체로 나타내준다. 이 객체는 수정이 가능하다.
+ * `document` 객체는 페이지의 기본 '진입점' 역할을 한다. `document` 객체를 이용해 페이지 내 그 무엇이든 변경할 수 있고,
+ * 원하는 것을 만들 수 있다.
+ */
+
+// 예시
+// 배경을 붉은 색으로 변경하기
+document.body.style.background = "red";
+
+// 1초 후 원상태로 복구하기
+setTimeout(() => document.body.style.background = "", 1000);
+
+/* 문서 객체 모델은 예시에서 소개한 document.body.style 외에도 수많은 기능을 제공한다. */
+
+/* i) DOM은 브라우저만을 위한 모델이 아니다.
+ * DOM 명세서엔 문서의 구조와 이를 조작할 수 있는 객체에 대한 설명이 담겨있다.
+ * 그런데 브라우저 아닌 곳에서도 DOM을 사용하는 경우가 있다.
+ * 
+ * HTML 페이지를 다운로드하고 이를 가공해주는 서버 사이드 스크립트에서도 DOM을 사용한다.
+ * 이런 스크립트에선 명세서 일부만을 지원한다.
+ */
+
+/* i) 스타일링을 위한 CSSOM
+ * CSS 규칙과 스타일시트(stylesheet)는 HTML과는 다른 구조를 띈다.
+ * 따라서 CSS 규칙과 스타일시트를 객체로 나타내고 이 객체를 어떻게 읽고 쓸 수 있을지에 대한 설명을 담은 명세서,
+ * CSS 객체 모델(CSS Object Model)이 존재한다.
+ * 
+ * CSSOM은 문서에 쓰이는 스타일 규칙을 수정할 때 DOM과 함께 쓰인다. 
+ * 그런데 CSS 규칙은 대부분 정적이기 때문에 CSSOM을 시무에서 자주 접하지는 않을 것이다.
+ * 자바스크립트를 이용해 CSS 규칙을 추가 혹은 제거해야 하는 경우는 극히 드물긴 하지만, 이때 CSSOM이 사용된다.
+ */
+
+/** 브라우저 객체 모델(BOM)
+ * 브아루저 객체 모델(Browser Object Model, BOM)은 
+ * 문서 이외의 모든 것을 제어하기 위해 브라우저(호스트 환경)가 제공하는 추가 객체를 나타낸다.
+ * 
+ * 예시:
+    * navigator 객체는 브라우저와 운영체제에 대한 정보를 제공한다. 
+        객체엔 다양한 프로퍼티가 있는데, 가장 잘 알려진 프로퍼티는 현재 사용 중인 브라우저 정보를 알려주는 navigator.userAgent와
+        실행 중인 운영체제(Widows, Linux, Mac 등) 정보를 알려주는 navigator.platform이다.
+    * location 객체는 현재 URL을 읽을 수 있게 해주고 새로운 URL로 변경(redirect)할 수 있게 해준다.
+ * 아래 예시는 location 객체를 어떻게 활용할 수 있을지 보여준다.
+ */
+alert(location.href); // 현재 URL을 보여줌
+if (confirm("위키피디아 페이지로 가시겠습니까?")) {
+    location.href = "https://wikipedia.org"; // 새로운 페이지로 넘어감
+}
+
+/* alert/confirm/prompt 역시 BOM의 일부이다. 문서와 직접 연결되어 있지 않지만, 사용자와 브라우저 사이의 커뮤니케이션을 도와주는 순수 브라우저 메서드이다. */
+
+/* i) 다양한 명세
+ * BOM은 HTML 명세서의 일부이다.
+ * 
+ * BOM에 관련된 명세가 따로 있지는 않다. whatwg에서 볼수 있는 HTML 명세서는 태그, HTML 속성(attribute) 같은 'HTML' 뿐만 아니라
+ * 다양한 객체와 메서드, 브라우저에서만 사용되는 DOM 확장을 다룬다. 이 모든 것이 HTML 기술에 속하기 때문이다.
+ */
