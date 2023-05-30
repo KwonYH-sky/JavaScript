@@ -69,7 +69,7 @@ setTimeout(() => document.body.style.background = "", 3000); // 원상태로 복
  * 
  * 공백이 없는 텍스트 노드만으로 HTML 문서를 구성하려면 HTML을 아래오ㅘ 같이 만들어야 한다.
 
-<!DOCTYPE>
+<!DOCTYPE HTML>
 <html><head><title>사슴에 관하여</title></head><body>사슴에 관한 진실</body></html>
 
  * HTML
@@ -139,3 +139,52 @@ setTimeout(() => document.body.style.background = "", 3000); // 원상태로 복
                 #text 1 
  * <tbody>가 나타났다. 테이블을 다룰 땐 위와 같이 생기는 것을 상기하자.
  */
+
+/** 기타 노드 타입
+ * 요소와 텍스트 노드 외에도 다양한 노드 타입이 있다.
+ * 주석도 노드가 된다. 
+<!DOCTYPE HTML>
+<html>
+<body>
+    사슴에 관한 진실.
+    <ol>
+        <li>사슴은 똑똑합니다.</li>
+        <!-- comment -->
+        <li>그리고 잔꾀를 잘 부리죠!</li>
+    </ol>
+</body>
+</html>
+
+ * HTML
+    * HEAD
+    * BODY
+        #text ↵␣␣사슴에 관한 진실.↵␣␣␣␣
+        * OL
+            #text ↵␣␣␣␣␣␣
+            * LI
+                #text 사슴은 똑똑합니다.
+            #text ↵␣␣␣␣␣␣
+            #comment comment
+            #text ↵␣␣␣␣␣␣
+            * LI
+                #text 그리고 잔꾀를 잘 부리죠!
+            #text ↵␣␣␣␣
+        #text ↵␣␣↵
+
+ * 트리에 주석 노드(comment node)라는 새로운 노드 타입이 등장했다. 
+ * 현재 #comment로 표현되는 주석 노드는 두 텍스트 노드 사이에 존재한다.
+ * 
+ * 주석은 화면 출력물에 영향을 주지 않지만, DOM에 추가가 된다.
+ * 주석 노드는 HTML에 뭔가 있다면 반드시 DOM 트리에 추가되어야 한다는 규칙 때문에 DOM에 추가된 것이다.
+ * 즉, HTML 안의 모든 것은(심지어 그것이 주석이라도) DOM을 구성한다.
+ * 
+ * HTML 문서 최상단에 위치하는 `<!DOCTYPE...>` 지시자 또한 DOM 노드가 된다.
+ * 이 노드는 DOM 트리의 <html> 바로 위에 위치한다.
+ * 
+ * 노드 타입은 총 열두 가지 인데, 실무에선 주로 다음 네 가지를 노드를 다룬다.
+    * 1. DOM의 '진입점'이 되는 문서(document) 노드
+    * 2. HTML 태그에서 만들어지며, DOM 트리를 구성하는 블록인 요소 노드(element node)
+    * 3. 텍스트를 포함하는 텍스트 노드(text node)
+    * 4. 화면에 보이지는 않지만, 정보를 기록하고 자바스크립트를 사용해 이 정보를 DOM으로부터 읽을 수 있는 주석(comment) 노드
+ * 
+*/
