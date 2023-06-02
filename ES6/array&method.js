@@ -923,3 +923,115 @@ shuffle(arr);
 function shuffle(arr) {
    arr.sort(()=> Math.random() - 0.5);
 }
+
+/** 평균 나이 구하기
+ * age를 나타내는 프로퍼티를 가진 객체가 여러 개 담긴 배열이 있습니다.
+ * 평균 나이를 반환해주는 함수 getAverageAge(users)를 작성해보세요.
+ * 
+ * 평균을 구하는 공식은 (age1 + age2 + ... + ageN) / N 입니다.
+ * 
+let john = { name: "John", age: 25 };
+let pete = { name: "Pete", age: 30 };
+let mary = { name: "Mary", age: 29 };
+
+let arr = [ john, pete, mary ];
+
+alert( getAverageAge(arr) ); // (25 + 30 + 29) / 3 = 28
+ */
+
+function getAverageAge(arr) {
+   let result = arr.reduce((sum, current) => sum + current.age, 0);
+   return result/arr.length;
+}
+
+/** 해답
+function getAverageAge(users) {
+  return users.reduce((prev, user) => prev + user.age, 0) / users.length;
+}
+ */
+
+/** 중복 없는 요소 찾아내기
+ * arr은 배열입니다.
+ * 배열 내 유일한 요소를 찾아주는 함수 unique(arr)를 작성해보세요.
+function unique(arr) {
+    your code
+}
+
+let strings = ["Hare", "Krishna", "Hare", "Krishna",
+  "Krishna", "Krishna", "Hare", "Hare", ":-O"
+];
+
+alert( unique(strings) ); // Hare, Krishna, :-O
+ */
+
+function unique(arr) {
+   let result = [];
+
+   for (let value of arr) {
+      if (!result.includes(value)) {
+         result.push(value);
+      }
+   }
+   return result;
+}
+
+/** 해답
+function unique(arr) {
+  let result = [];
+
+  for (let str of arr) {
+    if (!result.includes(str)) {
+      result.push(str);
+    }
+  }
+
+  return result;
+}
+
+let strings = ["Hare", "Krishna", "Hare", "Krishna",
+  "Krishna", "Krishna", "Hare", "Hare", ":-O"
+];
+
+alert( unique(strings) ); // Hare, Krishna, :-O
+ */
+
+/** 배열에서 키값 갖는 객체 만들기
+ * {id:..., name:..., age... } 형식의 user 배열을 받았다고 가정해 보겠다.
+ * id를 키로 하고 배열 항목을 값으로 하여 개체를 생성하는 함수 groupById(arr)를 만들어보자.
+let users = [
+  {id: 'john', name: "John Smith", age: 20},
+  {id: 'ann', name: "Ann Smith", age: 24},
+  {id: 'pete', name: "Pete Peterson", age: 31},
+];
+
+let usersById = groupById(users);
+
+
+// after the call we should have:
+
+usersById = {
+  john: {id: 'john', name: "John Smith", age: 20},
+  ann: {id: 'ann', name: "Ann Smith", age: 24},
+  pete: {id: 'pete', name: "Pete Peterson", age: 31},
+}
+
+ * 이러한 기능은 서버 데이터로 작업할 때 매우 유용하다
+ * 이 작업에서는 ID가 고유하다고 가정한다. ID가 동일한 두 배열 항목은 있을 수 없다.
+ * array.reduce 메서드를 사용하자
+ */
+
+function groupById(arr) {
+   return arr.reduce((users, value) => {
+      users[value.id] = value;
+      return users;
+   }, {});
+ }
+
+ /** 해답
+function groupById(array) {
+  return array.reduce((obj, value) => {
+    obj[value.id] = value;
+    return obj;
+  }, {})
+}
+  */
