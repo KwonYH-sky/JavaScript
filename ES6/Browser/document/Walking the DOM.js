@@ -98,3 +98,52 @@
 elem.childNodes[0] === elem.firstChild
 elem.childNodes[elem.childNodes.length - 1] === elem.lastChild
 /* 참고로 자식 노드의 존재 여부를 검사할 땐 함수 `elem.hasChildNodes()`를 사용 할 수도 있다. */
+
+/** DOM 컬렉션
+ * childNodes는 마치 배열처럼 보인다. 
+ * 하지만 childNodes는 배열이 아닌 반복 가능한(iterable, 이터러블) 유사 배열 객체인 컬렉션(collection)이다.
+ * 
+ * childNodes는 컬렉션이기 때문에 아래와 같은 특징을 갖는다.
+ */
+// 1. for..of를 사용할 수 있다.
+for (const node of document.body.childNodes) {
+  alert(node); // 컬렉션 내의 모든 노드를 보여준다.
+}
+
+/* 이터러블이기 때문에 Symbol.iterable 프로퍼티가 구현되어 있어서 for..of를 사용하는 것이 가능하다. */  
+
+// 2. 배열이 아니기 때문에 배열 메서드를 쓸 수 없다.
+alert(document.body.childNodes.filter); // undefined
+
+/* 첫 번째 특징은 장점으로 작용한다. 
+ * 두 번째 특징은 단점으로 느껴지지만 Array.from을 사용하면 '진짜' 배열을 만들 수 있어 대처 가능하다.
+ * 컬렉션에 배열 메서드를 사용하고 싶다면 Array.from 적용하자.
+ */
+alert( Array.from(document.body.childNodes).filter ); // function
+
+/* !) DOM 컬렉션은 읽는 것만 가능하다.
+ * DOM 컬렉션을 비롯해 여러 탐색용 프로퍼티는 읽기 전용이다.
+ * `childNodes[i] = ...`를 이용해 자식 노드를 교체하는 게 불가능하다.
+ * DOM을 변경하려면 다른 메서드가 필요하다.
+ */
+
+/* !) DOM 컬렉션은 살아있다.
+ * 몇몇 예외사항을 제외하고 거의 모든 DOM 컬렉션은 살아있다. 즉, DOM의 현재 상태를 반영한다는 말이다.
+ * `elem.childNodes`를 참조하고 있는 도중에 DOM에 새로운 노드가 추가되거나 삭제되면, 변경사항이 컬렉션에도 자동으로 반영된다.
+ */
+
+/* !) 컬렉션에 `for..in` 반복문을 사용하지 말자.
+ * 컬렉션은 `for..of`를 이용해 순회할 수 있다. 그런데 가끔 for..in을 사용하려는 사람들이 있다.
+ * 
+ * 허나, `for..in`을 사용해선 안된다. for..in 반복문은 객체의 모든 열거 가능한 프로퍼티를 순회한다.
+ * 컬렉션엔 거의 사용되지 않는 '추가' 프로퍼티가 있는데,
+ * 이 프로퍼티까지 순회 대상에 포함되기 때문이다.
+
+<body>
+<script>
+  // 0, 1, length, item, values 등 불필요한 프로퍼티까지도 출력된다.
+  for (let prop in document.body.childNodes) alert(prop);
+</script>
+</body>
+
+ */
