@@ -147,3 +147,75 @@ alert( Array.from(document.body.childNodes).filter ); // function
 </body>
 
  */
+
+/** 형제와 부모 노드
+ * 같은 부모를 가진 노드는 형제(sibling) 노드라고 부른다.
+ * <head>와 <body>는 대표적인 형제 노드이다.
+<html>
+  <head>...</head><body>...</body>
+</html>
+
+  * <body>는 <head>의 '다음(next)' 혹은 '우측(right)'에 있는 형제 노드이다.
+  * <head>는 <body>의 '이전(previous)' 혹은 '좌측(left)'에 있는 형제 노드이다.
+ * 
+ * 다음 형제 노드에 대한 정보는 `nextSibling`, 이전 형제 노드에 대한 정보는 `previousSibling` 프로퍼티에서 찾을 수 있다.
+ * 부모 노드에 대한 정보는 `parentNode` 프로퍼티를 이용해 참조할 수 있다.
+ */
+// 예시:
+//  <body>의 부모 노드는 <html>이다.
+alert( document.body.parentNode === document.documentElement ); // true
+
+// <head>의 다음 형제 노드는 <body>이다.
+alert( document.head.nextSibling ); // HTMLBodyElement
+
+// <body>의 이전 형제 노드는 <head>이다.
+alert( document.body.previousSibling ); // HTMLHeadElement
+
+/** 요소 간 이동
+ * 지금까지 언급한 탐색 관련 프로퍼티는 모든 종류의 노드를 참조한다. 
+ * childNodes를 이용하면 텍스트 노드, 요소 노드, 심지어 주석 노드까지 참조 할 수 있다.
+ * 하지만 실무에서 텍스트 노드나 주석 노드는 잘 다루지 않는다. 웹 페이지를 구성하는 태그의 분신인 요소 노드를 조작하는 작업이 대다수이다.
+  * children 프로퍼티는 해당 요소의 자식 노드 중 요소 노드만 가리킨다.
+  * firstElementChild와 lastElementChild 프로퍼티는 각각 첫 번째 자식요소 노드와 마지막 자식 요소 노드를 가리킨다.
+  * previousElementSibling과 nextElementSibling은 형제 요소 노드를 가리킨다.
+  * parentElement 는 부모 요소 노드를 가리킨다.
+ */
+
+/* i) 부모가 요소가 아니라면 parentElement는 어떻게 될까?
+ * parentElement 프로퍼티는 부모 '요소 노드'를 반환하는 반면 parentNode 프로퍼티는 '종류에 상관없이 부모 노드'를 반환한다.
+ * 대개 두 프로퍼티는 같은 노드를 반환한다.
+ * 
+ * 그런데 document.documentElement 아래와 같은 상황에서는 다른 노드를 반환한다.
+ */
+alert( document.documentElement.parentNode ); // document
+alert( document.documentElement.parentElement ); // null
+/* 반환 값이 다른 이유는 <html>에 해당하는 document.documentElement의 부모는 document 인데, 
+ * document 노드는 요소 노드가 아니기 때문이다. 
+ * 따라서 위 예시에서 parentNode는 의도한 대로 document 노드를 반환하지만, parentElement는 null를 반환한다.
+ * 
+ * 이런 사소한 차이는 임의의 요소 노드 `elem`에서 시작해 <html>까지 거슬러 올라가고 싶은데, document까지는 가고 싶지 않을 때 유용하게 활용할 수 있다.
+ */
+while (elem = elem.parentElement ) { // <html>까지 거슬러 올라간다.
+  alert( elem ); 
+}
+
+/* 앞서 보았던 예시에서 childNodes를 children으로 대체해보자 요소 노드만 출력되는 것을 확인 할 수 있다.
+<html>
+  <body>
+    <div>시작</div>
+
+    <ul>
+      <li>항목</li>
+    </ul>
+
+    <div>끝</div>
+
+    <script>
+      for (let elem of document.body.children) {
+        alert(elem); // DIV, UL, DIV, SCRIPT
+      }
+    </script>
+    ...
+  </body>
+</html>
+ */
