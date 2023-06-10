@@ -83,7 +83,7 @@
 
     <script>
       for (let i = 0; i < document.body.childNodes.length; i++) {
-        alert( document.body.childNodes[i] ); // Text, DIV, Text, UL, ... , SCRUPT
+        alert( document.body.childNodes[i] ); // Text, DIV, Text, UL, ... , SCRIPT
       }
     </script>
     ...추가 내용...
@@ -218,4 +218,53 @@ while (elem = elem.parentElement ) { // <html>까지 거슬러 올라간다.
     ...
   </body>
 </html>
+ */
+
+/** 테이블 탐색하기
+ * 일부 DOM 요소 노드는 편의를 위해 기본 프로퍼티 외에 추가적인 프로퍼티를 지원한다.
+ * 테이블이 가장 대표적이다.
+ * 
+ * <table> 요소는 기본 프로퍼티 이외에 다음과 같은 프로퍼티를 지원한다.
+  * table.rows는 <tr>요소를 담은 컬렉션을 참조한다.
+  * table.caption/tHead/tFoot은 각각 <caption>, <thead>, <tfoot> 요소를 참조한다.
+  * table.tBodies는 <tbody> 요소를 담은 컬렉션을 참조한다.
+      표준에 따르면, 테이블 내에 여러 개의 <tbody>가 존재하는게 가능한데, 최소한 하나는 무조건 있어야 한다.
+      HTML 문서에는 <tbody>가 없더라도 브라우저는 <tbody> 노드를 DOM에 자동으로 추가한다.
+ * 
+ * <thead>, <tfoot>, <tbody> 요소는 rows 프로퍼티를 지원한다.
+  * tbody.rows는 tbody 내 <tr> 요소 컬렉션을 참조한다.
+ * 
+ * <tr> 요소는 다음 프로퍼티를 지원한다.
+  * tr.cells는 주어진 <tr> 안의 모든 <td,> <th>을 담은 컬렉션을 반환한다.
+  * tr.sectionRowIndex는 주어진 <tr>이 <thead>/<tbody>/<tfoot> 안쪽에서 몇 번째 줄에 위치하는지를 나타내는 인덱스를 반환한다.
+  * tr.rowIndex는 <table>내에서 해당 <tr>이 몇 번째 줄인 지를 나타내는 숫자를 반환한다.
+ * 
+ * <td>와 <th> 요소는 다음 프로퍼티를 지원한다.
+  * td.cellIndex는 <td>나 <th>가 속한 <tr>에서 해당 셀이 몇 번째인지를 나타내는 숫자를 반환한다.
+  
+용례:
+<table>
+  <tr>
+    <td>일</td><td>이</td>
+  </tr>
+  <tr>
+    <td>삼</td><td>사</td>
+  </tr>
+</table>
+
+<script>
+  // '이'가 적힌 td를 가져옴(첫 번째 줄, 두 번째 칸)
+  let td = table.row[0].cells[1];
+  td.style.backgroundColor = "red"; // 강조
+</script>
+
+ * 테이블과 마찬가지로, HTML 폼(form)에만 쓸 수 있는 탐색 프로퍼티도 있다.
+ */
+
+/** 요약
+ * 탐색 프로퍼티를 사용하면 이웃 노드로 바로 이동할 수 있다.
+ * 탐색 프로퍼티는 크게 두 개의 집합으로 나뉜다.
+  * 모든 노드에 적용 가능한 parentNode, childNodes, firstChild, lastChild, previousSibling, nextSibling
+  * 요소 노드에만 적용 가능한 parentElement, children, firstElementChild, lastElementChild, previousElementSibling, nextElementSibling
+ * 테이블과 같은 몇몇 DOM 요소는 추가 프로퍼티와 콘텐츠에 접속 할 수 있게 해주는 컬렉션을 제공한다.
  */
