@@ -65,3 +65,61 @@
  * getElementById는 document 객체를 대상으로 해당 id를 가진 요소 노드를 찾아준다.
  * 문서 노드가 아닌 다른 노드엔 호출할 수 없다.
  */
+
+/** querySelectorAll
+ * elem.querySelectorAll(css)은 다재다능한 요소 검색 메서드이다.
+ * 이 메서드는 elem의 자식 요소 중 주어진 CSS 선택자에 대응하는 요소 모두를 반환한다.
+ * 
+ * 아래 예시는 마지막 <li>요소 모두를 반환한다.
+<ul>
+  <li>1-1</li>
+  <li>1-2</li>
+</ul>
+<ul>
+  <li>2-1</li>
+  <li>2-2</li>
+</ul>
+<script>
+  let elements = document.querySelectorAll('ul > li:last-child');
+
+  for (let elem of elements) {
+    alert(elem.innerHTML); "1-2", "2-2"
+  }
+</script>
+ * querySelectorAll은 CSS 선택자를 활용할 수 있다는 점에 아주 유용하다.
+ */
+
+/* i) 가상 클래스도 사용할 수 있다.
+ * querySelectorAll에는 :hover나 :active 같은 CSS 선택자의 가상 클래스(pseudo-class)도 사용할 수 있다.
+ * document.querySelectorAll(':hover')을 사용하면 마우스 포인터가 위에 있는(hover 상태인) 요소 모두를 담은 컬렉션이 반환된다.
+ * 이때 컬렉션은 DOM 트리 최상단에 위치한 <html>부터 가장 하단의 요소 순으로 채워진다.
+ */
+
+/** querySelector
+ * elem.querySelector(css)는 주어진 CSS 선택자에 대응하는 요소 중 첫 번째 요소를 반환한다.
+ * 
+ * elem.querySelectorAll(css)[0]과 동일하다. 
+ * elem.querySelectorAll[0]은 선택자에 해당하는 모든 요소를 검색해 첫 번째 요소만을 반환하고,
+ * elem.querySelector는 해당하는 요소를 찾으면 검색을 멈춘다는 점에서 차이가 있다. elem.querySelector가 더 빠른 이유이기도 하다.
+ * querySelector는 querySelectorAll에 비해 코드의 길이가 짧다는 장점도 있다.
+ */
+
+/** matches
+ * 앞서 언급한 모든 메서드는 DOM 검색에 쓰인다.
+ * elem.matches(css)는 DOM을 검색하는 일이 아닌 조금 다른 일을 한다.
+ * 이 메서드는 요소 elem이 주어진 CSS 선택자와 일치하는지 여부를 판단해준다. 일치한다면 true, 아니라면 false를 반환한다.
+ * 요소가 담겨있는 배열 등을 순회해 원하는 요소만 걸러내고자 할 때 유용하다.
+ * 
+ * 예시
+<a href="http://example.com/file.zip">...</a>
+<a href="http://ya.ru">...</a>
+
+<script>
+  // document.body.children이 아니더라도 컬렉션이라면 이 메서드를 적용할 수 있다.
+  for (let elem of document.body.children) {
+    if (elem.matches('a[href$="zip"]')) {
+      alert("주어진 CSS 선택자와 일치하는 요소: " + elem.href );
+    }
+  }
+</script>
+ */
