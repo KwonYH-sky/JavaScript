@@ -123,3 +123,45 @@
   }
 </script>
  */
+
+/** closest
+ * 부모 요소, 부모 요소의 부모 요소 등 DOM 트리에서 특정 요소의 상위에 있는 요소들은 조상(ancestor) 요소라고 한다.
+ * 메서드 elem.closest(css)는 elem 자기 자신을 포함하여 CSS 선택자와 일치하는 가장 가까운 조상 요소를 찾을 수 있게 도와준다.
+ * 
+ * closest 메서드는 해당 요소부터 시작해 DOM 트리을 한 단계씩 거슬러 올라가면서 원하는 요소를 찾는다.
+ * CSS 선택자와 일치하는 요소를 찾으면, 검색을 중단하고 해당 요소를 반환한다.
+ * 
+ * 예시:
+<h1>목차</h1>
+
+<div class="contents">
+  <ul class="book">
+    <li class="chapter">1장</li>
+    <li class="chapter">2장</li>
+  </ul>
+</div>
+
+<script>
+  let chapter = document.querySelector('.chapter'); // LI
+
+  alert(chapter.closest('.book')); // UL
+  alert(chapter.closest('.contents')); // DIV
+
+  alert(chapter.closest('.h1')); // null(h1은 li의 조상 요소가 아님)
+</script>
+ */
+
+/** getElementsBy*
+ * 태그나 클래스 등을 이용해 원하는 노드를 찾아주는 메서드도 있다.
+ * querySelector를 이용하는 게 더 편리하고 문법도 짧아서, 요즘은 이런 메서드들은 잘 쓰진 않는다.
+ * 하지만 오래된 스크립트에서 사용할 수 있으니 아래 메서드들을 알아두자.
+  * elem.getElementsByTagName(tag) - 주어진 태그에 해당하는 요소를 찾고, 대응하는 요소를 담은 컬렉션을 반환한다.
+      매개변수 tag에 "*"이 들어가면, '모든 태그'가 검색된다.
+  * elem.getElementsByClassName(className) - class 속성값을 기준으로 요소를 찾고, 대응하는 요소를 담은 컬렉션을 반환한ㄴ다.
+  * document.getElementsByName(name) - 아주 드물게 쓰이는 메서드로, 문서 전체를 대상으로 검색을 수행한다. 
+      검색 기준은 name 속성값이고, 이 메서드 역시 검색 결과를 담은 컬렉션을 반환한다.
+ */
+
+// 예시:
+// 문서 내 모든 div를 얻는다.
+let divs = document.getElementsByTagName('div');
